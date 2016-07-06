@@ -28,9 +28,9 @@ transformed parameters{
 	vector[2] range;
 
 	for (i in 1:SIZE) {
-		range[1] <- log(VY[i]) + VRANGE[1];
-		range[2] <- log(VY[i]) + VRANGE[2];
-		vs[i]    <- exp(range[1] + uvs[i]*(range[2] - range[1]));
+		range[1] = log(VY[i]) + VRANGE[1];
+		range[2] = log(VY[i]) + VRANGE[2];
+		vs[i]    = exp(range[1] + uvs[i]*(range[2] - range[1]));
 	}
 }
 
@@ -47,6 +47,6 @@ model {
 generated quantities {
 	real mu[SIZE];
 	for (i in 1:SIZE) {
-		mu[i] <- b0+phi[i];
+		mu[i] = b0+phi[i];
 	}
 }

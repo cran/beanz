@@ -20,17 +20,20 @@ print(subgrp.effect);
 
 ## ---- eval=T, echo=TRUE--------------------------------------------------
 
+var.cov    <- c("sodium", "lvef", "any.vasodilator.use");
 var.estvar <- c("Estimate", "Variance");
 
 rst.nse <- call.stan("nse", dat.sub=subgrp.effect,
                      var.estvar = var.estvar, var.cov = var.cov,
                      lst.par.pri = list(vtau=1000, vrange=c(0,0)),
-                     chains=1, iter=4000, warmup=2000, thin=2, seed=1000);
+                     chains=1, iter=4000,
+                     warmup=2000, thin=2, seed=1000);
 
 rst.sr  <- call.stan("sr", dat.sub=subgrp.effect,
                      var.estvar = var.estvar, var.cov = var.cov,
                      lst.par.pri = list(vtau=1000, vgamma=1000, vrange=c(0,0)),
-                     chains=1, iter=4000, warmup=2000, thin=2, seed=1000);
+                     chains=1, iter=4000,
+                     warmup=2000, thin=2, seed=1000);
 
 rst.bs  <- call.stan("bs", dat.sub=subgrp.effect,
                      var.estvar = var.estvar, var.cov = var.cov,
@@ -72,6 +75,7 @@ print(tbl.summary);
 #  run.beanz();
 
 ## ---- echo=T-------------------------------------------------------------
-gs.pval <- r.gailsimon(subgrp.effect$Estimate, subgrp.effect$Variance);
+gs.pval <- r.gailsimon(subgrp.effect$Estimate,
+                       sqrt(subgrp.effect$Variance));
 print(gs.pval);
 

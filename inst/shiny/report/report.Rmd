@@ -66,7 +66,7 @@ for (myi in 1:length(arst)) {
     dic        <- get.all.dic();
     min.mdl    <- which.min(dic);
     mdls       <- get.ana.models();
-    rst        <- r.rpt.summary(arst, dat, sub.cov, disp.cut, disp.digit);
+    rst        <- r.rpt.tbl(arst, dat, sub.cov, disp.cut, disp.digit);
 ```
 
 Based on DIC, `r mdls[min.mdl]` model is selected for the analysis dataset. The summary result table is as follows:

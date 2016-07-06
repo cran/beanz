@@ -16,6 +16,17 @@ run.beanz <- function() {
              call. = FALSE)
     }
 
+    if (!requireNamespace("shinythemes", quietly = TRUE)) {
+        stop("shinythemes needed for this function to work. Please install it.",
+             call. = FALSE)
+    }
+
+    if (!requireNamespace("DT", quietly = TRUE)) {
+        stop("shinythemes needed for this function to work. Please install it.",
+             call. = FALSE)
+    }
+
+
     appDir <- system.file("shiny", package = "beanz")
     if (appDir == "") {
         stop("Could not find Shiny directory. Try re-installing `beanz`.",
