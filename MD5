@@ -1,4 +1,4 @@
-c71764f5e1c6e6916526df3225550f3c *DESCRIPTION
+22b2c1302bb0fb8547af6e1fb62b4165 *DESCRIPTION
 142ddb6ee2075bec022b314a12b4f9e1 *NAMESPACE
 9c120a26361281e1c6d30ba3d7fdd94c *R/beanz_data.R
 f6a969a5e5eceb27eff24c98d87e44ce *R/beanz_package.R
@@ -21,7 +21,7 @@ f65f179c83d905d47b689dcf9f0c6138 *exec/sr.stan
 1cb49c7e1f66631d7d2cf6a812688517 *exec/srs.stan
 1aeead63aeee97fc301145fa5907fa09 *inst/doc/beanz_vignettes.R
 2eaca34c3cfe88b8d2e2342f643058eb *inst/doc/beanz_vignettes.Rmd
-192e7cce40450d3e1f58e14c7a1b6b1d *inst/doc/beanz_vignettes.html
+9e49a506938ef89187253adfb24b855a *inst/doc/beanz_vignettes.html
 51048337d44fbb947cdc28841286991a *inst/shiny/beanz_ui.R
 5f45fe6c4a32a80931cdfc7d9fd9f59f *inst/shiny/report/report.Rmd
 e95d568b6179f515bca3f04e8fd680a8 *inst/shiny/server.R
