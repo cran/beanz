@@ -4,7 +4,10 @@
 ##
 ##     theta_g ~ N(b+phi_g, sigma^2)
 ##     phi_g ~ N(0, omega^2)
+##
 ##     omega^2 ~ N(0,1)
+##     
+##
 
 data {
 	int<lower=0> SIZE;
@@ -16,9 +19,9 @@ data {
 }
 
 parameters {
-    vector[SIZE] phi;
-    real b0;
-    real<lower=0> omega;
+  vector[SIZE] phi;
+  real b0;
+  real<lower=0> omega;
 	real<lower=0, upper=1> uvs[SIZE];
 }
 
@@ -35,13 +38,21 @@ transformed parameters{
 }
 
 model {
-    b0    ~ normal(0, sqrt(VTAU));
-    phi   ~ normal(0, sqrt(omega));
+  b0    ~ normal(0, sqrt(VTAU));
+  phi   ~ normal(0, sqrt(omega));
+  uvs   ~ uniform(0,1);
+
+  if (0 == VW) {
+    //jeffreys
+    target += -log(omega);
+  } else {
+    //half normal
     omega ~ normal(0, sqrt(VW));
-	uvs ~ uniform(0,1);
-    for (i in 1:SIZE) {
-		Y[i] ~ normal(b0+phi[i], sqrt(vs[i]));
-    }
+  }
+
+  for (i in 1:SIZE) {
+     Y[i] ~ normal(b0+phi[i], sqrt(vs[i]));
+  }
 }
 
 generated quantities {

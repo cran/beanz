@@ -23,7 +23,7 @@ parameters {
     vector[NX] beta;
     real b0;
     real<lower=0> omega;
-	real<lower=0, upper=1> uvs[SIZE];
+	  real<lower=0, upper=1> uvs[SIZE];
 }
 
 transformed parameters{
@@ -38,14 +38,19 @@ transformed parameters{
 }
 
 model {
-    b0    ~ normal(0, sqrt(VTAU));
-    beta  ~ normal(0, sqrt(omega));
-    omega ~ normal(0, sqrt(VW));
-	uvs ~ uniform(0,1);
+  b0    ~ normal(0, sqrt(VTAU));
+  beta  ~ normal(0, sqrt(omega));
+  uvs   ~ uniform(0,1);
 
-    for (i in 1:SIZE) {
-		Y[i] ~ normal(b0+X[i]*beta, sqrt(vs[i]));
-    }
+  if (0 == VW) {
+    target += -log(omega);
+  } else {
+    omega ~ normal(0, sqrt(VW));
+  }
+
+  for (i in 1:SIZE) {
+ 		 Y[i] ~ normal(b0+X[i]*beta, sqrt(vs[i]));
+  }
 }
 
 generated quantities {

@@ -71,6 +71,13 @@ lst.rst     <- list(nse=rst.nse, sr=rst.sr, bs=rst.bs);
 tbl.summary <- r.rpt.tbl(lst.rst, dat.sub = subgrp.effect, var.cov = var.cov);
 print(tbl.summary);
 
+## ---- eval=T, echo=TRUE--------------------------------------------------
+pred.dist <- r.pred.subgrp.effect(rst.sr,
+                                  dat.sub=subgrp.effect,
+                                  var.estvar = var.estvar,
+                                  vrange = c(0,0));
+head(pred.dist);
+
 ## ---- eval=F-------------------------------------------------------------
 #  run.beanz();
 

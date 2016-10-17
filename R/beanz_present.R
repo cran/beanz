@@ -164,6 +164,7 @@ r.forest.comp <- function(stan.rst, sel.grps=NULL, ..., quants=c(0.025,0.975)) {
 ##-----------------------------------------------------------------------------------
 ##                     posterior summary
 ##-----------------------------------------------------------------------------------
+
 #' Posterior subgroup treatment effects
 #'
 #' Present the posterior subgroup treatment effects
@@ -274,7 +275,66 @@ r.forest.stan <- function(stan.rst, sel.grps=NULL,
     plot.forest(mu.qmean, main="Subgroup Effects Forest Plot", ...);
 }
 
+#' Predictive Distribution
+#'
+#' Get the predictive distribution of the subgroup treatment effects
+#'
+#' @param vrange the pair of \eqn{\Delta_1} and \eqn{\Delta_2}. see \code{\link{beanz-package}}.
+#' @inheritParams call.stan
+#' @inheritParams r.summary.stan
+#'
+#' @return A dataframe of predicted subgroup treament effects. That is, the
+#'     distribution of \deqn{ \theta_g | \widehat{\theta}_1, \widehat{\sigma}^2_1, \ldots,
+#'     \widehat{\theta}_G, \widehat{\sigma}^2_G.}
+#'
+#' @examples
+#' \dontrun{
+#' var.cov    <- c("sodium", "lvef", "any.vasodilator.use");
+#' var.resp   <- "y";
+#' var.trt    <- "trt";
+#' var.censor <- "censor";
+#' resptype   <- "survival";
+#' var.estvar <- c("Estimate", "Variance");
+#'
+#' subgrp.effect <- r.get.subgrp.raw(solvd.sub,
+#'                                   var.resp   = var.resp,
+#'                                   var.trt    = var.trt,
+#'                                   var.cov    = var.cov,
+#'                                   var.censor = var.censor,
+#'                                   resptype   = resptype);
+#'
+#' rst.nse    <- call.stan("nse", dat.sub=subgrp.effect,
+#'                          var.estvar = var.estvar, var.cov = var.cov,
+#'                          lst.par.pri = list(vtau=1000, vrange=c(0,0)),
+#'                          chains=1, iter=4000,
+#'                          warmup=2000, thin=2, seed=1000);
+#' pred.effect <- r.pred.subgrp.effect(rst.nes,
+#'                                     dat.sub = solvd.sub,
+#'                                     var.estvar = var.estvar,
+#'                                     vrange = c(0,0));}
+#' @export
+#'
+r.pred.subgrp.effect <- function(stan.rst, dat.sub, var.estvar, vrange) {
 
+    stopifnot(class(stan.rst) == "beanz.stan");
+    mus    <- stan.rst$get.mus();
+    sigma2 <- dat.sub[, var.estvar[2]];
+    nsub   <- nrow(dat.sub);
+
+    f.sig <- function() {
+        eps  <- runif(nsub, vrange[1], vrange[2]);
+        lsig <- log(sigma2) + eps;
+        exp(lsig);
+    }
+
+    rst <- apply(mus, 1, function(x) {
+        cur.sig <- f.sig();
+        cur.rst <- rnorm(nsub, x, sqrt(cur.sig));
+        cur.rst
+    })
+
+    t(rst)
+}
 
 ##-----------------------------------------------------------------------------------
 ##                     traceplot

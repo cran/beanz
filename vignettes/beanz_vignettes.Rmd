@@ -170,6 +170,19 @@ tbl.summary <- r.rpt.tbl(lst.rst, dat.sub = subgrp.effect, var.cov = var.cov);
 print(tbl.summary);
 ```
 
+# Predictive distribution
+
+Function *r.pred.subgrp.effect* generates the predictive distribution of the
+subgrooup treatment effects.
+
+```{r, eval=T, echo=TRUE}
+pred.dist <- r.pred.subgrp.effect(rst.sr,
+                                  dat.sub=subgrp.effect,
+                                  var.estvar = var.estvar,
+                                  vrange = c(0,0));
+head(pred.dist);
+```
+
 
 # Graphical User Interface
 

@@ -370,6 +370,11 @@ shinyServer(function(input, output, session) {
             if (is.null(arst))
                 return(NULL);
 
+            ##predictive distribution
+            apred <- pred.rst();
+            ##current subgroup data
+            dat.sub <- get.subgrp();
+
             ##models dic
             dic <- get.all.dic();
 
@@ -394,6 +399,10 @@ shinyServer(function(input, output, session) {
                         r.forest.stan(arst[[myi]], sel.grps=sub.sel, cut=disp.cut, ref.stan.rst=ref);
                     }, bg="transparent", width=900, height=450)
 
+                    plotname <- paste("plotpred", myi, sep="");
+                    output[[plotname]] <- renderPlot({
+                        plot.pred(apred[[myi]], dat.sub, SUB.HEAD);
+                    }, bg="transparent", width=900, height=450)
 
                     uname <- paste("tblrst", myi, sep="");
                     output[[uname]] <- DT::renderDataTable(
@@ -416,7 +425,6 @@ shinyServer(function(input, output, session) {
                     output[[plotname]] <- renderPlot({
                         r.forest.comp(arst[[myi]], sel.grps=sub.sel, cut=disp.cutcomp);
                     }, bg="transparent", width=500, height=400);
-
 
                     uname <- paste("tblcomp", myi, sep="");
                     output[[uname]] <- DT::renderDataTable(

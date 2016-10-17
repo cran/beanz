@@ -266,3 +266,4 @@ get.mdl.name <- function(mdl) {
 
     rst <- ALL.MODELS[which(mdl == STAN.NAME)];
 }
+

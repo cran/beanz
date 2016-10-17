@@ -41,15 +41,22 @@ transformed parameters{
 
 
 model {
-    phi     ~ normal(0, sqrt(omega));
-    omega   ~ normal(0, sqrt(VW));
-    b0      ~ normal(0, sqrt(VTAU));
-    bgamma  ~ normal(0, sqrt(VGAMMA));
-	  uvs     ~ uniform(0,1);
+  phi     ~ normal(0, sqrt(omega));
+  b0      ~ normal(0, sqrt(VTAU));
+  bgamma  ~ normal(0, sqrt(VGAMMA));
+  uvs     ~ uniform(0,1);
 
-for (i in 1:SIZE) {
+  if (0 == VW) {
+    //jeffreys
+    target += -log(omega);
+  } else {
+    //half normal
+    omega ~ normal(0, sqrt(VW));
+  }
+
+  for (i in 1:SIZE) {
 		Y[i] ~ normal(b0+X[i]*bgamma+phi[i], sqrt(vs[i]));
-    }
+  }
 }
 
 generated quantities {

@@ -18,7 +18,6 @@ RESP.TYPE   <- c("Continuous",
                  "Time to event with treatment effect measured by log hazard ratio");
 SUB.HEAD    <- c("Estimate", "Variance");
 
-
 ##-------------------------------------------------------------
 ##           UI DEFINITIONS
 ##-------------------------------------------------------------
@@ -70,6 +69,8 @@ gen.rst.tabs <- reactive({
                                                               plotOutput(paste("plotrst",i,sep=""))),
                                                      tabPanel("Forest plot",
                                                               plotOutput(paste("plotforest",i,sep=""))),
+                                                     tabPanel("Predictive plot",
+                                                              plotOutput(paste("plotpred",i,sep=""))),
                                                      align="center"
                                                      )
                                          );
@@ -129,6 +130,7 @@ gen.rst.tabs.mdl <- reactive({
     pan.table      <- get.stab(mrst, "tblrst", DT::dataTableOutput);
     pan.den        <- get.stab(mrst, "plotrst", plotOutput);
     pan.forest     <- get.stab(mrst, "plotforest", plotOutput);
+    pan.pred       <- get.stab(mrst, "plotpred", plotOutput);
     pan.tablecomp  <- get.stab(mrst, "tblcomp", DT::dataTableOutput);
     pan.stan       <- get.stab(mrst, "txtrst", verbatimTextOutput);
     pan.trace      <- get.stab(mrst, "plottrace", plotOutput);
@@ -152,6 +154,7 @@ gen.rst.tabs.mdl <- reactive({
                 tabPanel("Table", pan.table),
                 tabPanel("Density", pan.den),
                 tabPanel("Forest plot", pan.forest),
+                tabPanel("Predict plot", pan.pred),
                 "Comparison",
                 tabPanel("Table", pan.tablecomp),
                 tabPanel("Density", pan.dencomp),
@@ -230,7 +233,7 @@ panel.priors <- function() {
 
         n.chk <- paste("chkM", inx, sep="");
         n.par <- paste("parM", inx, sep="");
-        n.lab <- sprintf("<span class='hline2'>
+        n.lab <- sprintf("<span class='h4'>
                            %s
                           </span>", ALL.MODELS[inx])
 
@@ -247,48 +250,60 @@ panel.priors <- function() {
                                  HTML(n.lab1),
                                  div(class='intro', id="parM1",
                                      h6("Prior variance of the group mean"),
-                                     sliderInput(inputId = "m1vtau", label = "", value = 1000, min = 100, max = 10000, step=100)
+                                     sliderInput(inputId = "m1vtau", label = "",
+                                                 value = 1000, min = 100, max = 10000, step=100)
                                      ))
                              ),
                     f.each(2,
                           h6("Prior variance of the group mean"),
-                           sliderInput(inputId = "m2vtau", label = "", value = 1000, min = 100, max = 10000, step=100)
+                          sliderInput(inputId = "m2vtau", label = "", value = 1000,
+                                      min = 100, max = 10000, step=100)
                            ),
                     f.each(3,
                            h6("Prior variance of the intercept"),
-                           sliderInput(inputId = "m3vtau", label = "", value = 1000, min = 100, max = 10000, step=100),
+                           sliderInput(inputId = "m3vtau", label = "", value = 1000,
+                                       min = 100, max = 10000, step=100),
                            h6("Prior variance of regression coefficients"),
-                           sliderInput(inputId = "m3vgamma", label = "", value = 1000, min = 100, max = 10000, step=100)
+                           sliderInput(inputId = "m3vgamma", label = "", value = 1000,
+                                       min = 100, max = 10000, step=100)
                            )
                     ),
              column(4,
                     f.each(4,
                            h6("Prior variance of the group mean"),
-                           sliderInput(inputId = "m4vtau", label = "", value = 1000, min = 100, max = 10000, step=100),
+                           sliderInput(inputId = "m4vtau", label = "", value = 1000,
+                                       min = 100, max = 10000, step=100),
                            h6("Prior variance of the shrinkage parameter"),
-                           sliderInput(inputId = "m4vw", label = "", value = 100, min = 0.1, max = 500, step=0.5)
+                           sliderInput(inputId = "m4vw", label = "", value = 0,
+                                       min = 0, max = 500, step=0.5)
                            ),
                     f.each(5,
                            h6("Prior variance of the intercept"),
-                           sliderInput(inputId = "m5vtau", label = "", value = 1000, min = 100, max = 10000, step=100),
+                           sliderInput(inputId = "m5vtau", label = "", value = 1000,
+                                       min = 100, max = 10000, step=100),
                            h6("Prior variance of regression coefficients"),
-                           sliderInput(inputId = "m5vgamma", label = "", value = 1000, min = 100, max = 10000, step=100),
+                           sliderInput(inputId = "m5vgamma", label = "", value = 1000,
+                                       min = 100, max = 10000, step=100),
                            h6("Prior variance of the shrinkage parameter"),
-                           sliderInput(inputId = "m5vw", label = "", value = 100, min = 0.1, max = 500, step=0.5)
+                           sliderInput(inputId = "m5vw", label = "", value = 0,
+                                       min = 0, max = 500, step=0.5)
                           )
                     ),
              column(4,
                     f.each(6,
                            h6("Prior variance of the group mean"),
-                           sliderInput(inputId = "m6vtau", label = "", value = 1000, min = 100, max = 10000, step=100),
+                           sliderInput(inputId = "m6vtau", label = "", value = 1000, min = 100,
+                                       max = 10000, step=100),
                            h6("Prior variance of the shrinkage parameter"),
                            sliderInput(inputId = "m6vw", label = "", value = 100, min = 0.1, max = 500, step=0.5)
                            ),
                     f.each(7,
                            h6("Prior variance of the group mean"),
-                           sliderInput(inputId = "m7vtau", label = "", value = 1000, min = 100, max = 10000, step=100),
+                           sliderInput(inputId = "m7vtau", label = "", value = 1000,
+                                       min = 100, max = 10000, step=100),
                            h6("Prior variance of the shrinkage parameter"),
-                           sliderInput(inputId = "m7vw", label = "", value = 100, min = 0.1, max = 500, step=0.5)
+                           sliderInput(inputId = "m7vw", label = "", value = 0,
+                                       min = 0, max = 500, step=0.5)
                            )
                     )
              );
@@ -408,6 +423,8 @@ tab.mcmc <- function() {
              wellPanel(
                  h4("Statistical Models and Priors"),
                  msg.box("<p>Select statistical models and specify priors for model parameters.</p>
+                          <p>Note that if <b>Prior variance of the shrinkage parameter</b> is set to 0,
+                            the non-informative Jeffreys prior will be used.</p>
                           <p>Details of the models can be found
                           in the <a href='paper_beanz.pdf'>software manual</a>.</p>"),
                  panel.priors()
@@ -841,6 +858,29 @@ get.anoint <- reactive({
 })
 
 
+pred.rst <- reactive({
+
+    arst <- ana.rst();
+
+    if (is.null(arst))
+        return(NULL);
+
+    isolate({
+        dat.sub    <- get.subgrp();
+        vrange     <- input$rangelogvar;
+        var.estvar <- SUB.HEAD;
+
+        rst <- NULL;
+        for(i in 1:length(arst)) {
+            rst[[i]] <- r.pred.subgrp.effect(arst[[i]],
+                                             dat.sub=dat.sub,
+                                             var.estvar = var.estvar,
+                                             vrange = vrange);
+        }
+        names(rst) <- names(arst);
+    })
+    rst;
+})
 
 ##apply anoint to subject level data
 r.get.anoint <- function(data.all, var.resp, var.trt, var.cov, var.censor, resptype) {
@@ -879,4 +919,21 @@ r.get.anoint <- function(data.all, var.resp, var.trt, var.cov, var.censor, respt
     list(obo=anoint::obo(ano.rst),
          uim=anoint::uim(ano.rst),
          pim=pim.rst);
+}
+
+plot.pred <- function(aprst, dat.sub, var.estvar) {
+    par(mfrow=c(2,2))
+    funs   <- list(median, sd, min, max);
+    titles <- c("Median", "Standard Deviation", "Minimum", "Maximimu");
+
+    for (i in 1:length(funs)) {
+        cur.sum <- apply(aprst, 2, funs[[i]]);
+        cur.obs <- funs[[i]](dat.sub[,var.estvar[1]]);
+        plot(density(cur.sum), lwd=2,
+             xlab="Subgroup Treatment Effect",
+             ylab="Density",
+             main=titles[i]);
+        lines(c(cur.obs,cur.obs), c(0, 1e10), lwd=2, col="red");
+        text(cur.obs, 0, "Observed", col="red");
+    }
 }

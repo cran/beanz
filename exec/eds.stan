@@ -22,14 +22,14 @@ data {
 
     real<lower=0> VTAU;
     real<lower=0> VW;
-	real VRANGE[2];
+  	real VRANGE[2];
 }
 
 parameters {
     vector[NX] beta;
     real b0;
     real<lower=0> omega[NTAU];
-	real<lower=0, upper=1> uvs[SIZE];
+	  real<lower=0, upper=1> uvs[SIZE];
 }
 
 transformed parameters{
@@ -44,15 +44,25 @@ transformed parameters{
 }
 
 model {
+  b0    ~ normal(0, sqrt(VTAU));
+  uvs ~ uniform(0,1);
+
+  if (0 == VW) {
+    //jeffreys
+    for (i in 1:NTAU) {
+      target += -log(omega[i]);
+    }
+  } else {
+    //half normal
     omega ~ normal(0, sqrt(VW));
-    b0    ~ normal(0, sqrt(VTAU));
-	uvs ~ uniform(0,1);
+  }
+
 
     for (i in 1:NX) {
-		beta[i] ~ normal(0, sqrt(omega[TAUINX[i]]));
+  		beta[i] ~ normal(0, sqrt(omega[TAUINX[i]]));
     }
     for (i in 1:SIZE) {
-		Y[i] ~ normal(b0+X[i]*beta, sqrt(vs[i]));
+	  	Y[i] ~ normal(b0+X[i]*beta, sqrt(vs[i]));
     }
 }
 
