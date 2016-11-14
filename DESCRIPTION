@@ -1,6 +1,6 @@
 Package: beanz
 Title: Bayesian Analysis of Heterogeneous Treatment Effect
-Version: 1.7
+Version: 1.7.1
 Author: Chenguang Wang [aut, cre],
     Ravi Varadhan [aut],
     Trustees of Columbia University [cph] (tools/make_cpp.R, R/stanmodels.R)
@@ -27,6 +27,6 @@ Imports: rstan (>= 2.10.1), methods, survival
 Suggests: knitr, shiny, anoint, rmarkdown, pander, shinythemes, DT
 RoxygenNote: 5.0.1
 VignetteBuilder: knitr
-Packaged: 2016-10-17 06:21:51 UTC; cwang68
+Packaged: 2016-11-14 04:52:23 UTC; cwang68
 Repository: CRAN
-Date/Publication: 2016-10-17 12:41:15
+Date/Publication: 2016-11-14 11:15:01

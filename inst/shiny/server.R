@@ -77,7 +77,9 @@ shinyServer(function(input, output, session) {
     ##-----RAW:select response variable----
     output$uiResp <- renderUI({
         dat <- get.data();
-        if (is.null(dat)) return;
+        if (is.null(dat))
+            return(NULL);
+
         vname <- colnames(dat);
         selectInput("selresp","",
                     choices = vname,
@@ -87,7 +89,8 @@ shinyServer(function(input, output, session) {
     ##-----RAW:select treatment variable----
     output$uiTrt <- renderUI({
         dat <- get.data();
-        if (is.null(dat)) return;
+        if (is.null(dat))
+            return(NULL);
 
         vname <- colnames(dat);
         selectInput("seltrt","",
@@ -98,7 +101,8 @@ shinyServer(function(input, output, session) {
     ##-----RAW:select censor variable----
     output$uiCensor <- renderUI({
         dat <- get.data();
-        if (is.null(dat)) return;
+        if (is.null(dat))
+            return(NULL);
 
         vname <- colnames(get.data());
         selectInput("selcensor","",
@@ -112,7 +116,8 @@ shinyServer(function(input, output, session) {
         dat <- get.data();
         if (is.null(dat) |
             is.null(input$selsube) |
-            is.null(input$selsubvar)) return();
+            is.null(input$selsubvar))
+            return(NULL);
 
         vname <- colnames(dat);
         vname <- vname[-which(vname == input$selsube | vname == input$selsubvar)];
@@ -138,7 +143,9 @@ shinyServer(function(input, output, session) {
     output$uisubVar <- renderUI({
         dat <- get.data();
         if (is.null(dat) |
-            is.null(input$selsube)) return;
+            is.null(input$selsube))
+            return(NULL);
+
         vname <- colnames(dat);
         vname <- vname[-which(vname == input$selsube)];
         selectInput("selsubvar","",
@@ -167,7 +174,8 @@ shinyServer(function(input, output, session) {
 
     ##------subgroup validation----------
     output$uiValid <- renderText({
-        if (0 == input$btnSub) return(NULL);
+        if (0 == input$btnSub)
+            return(NULL);
 
         dat <- get.data();
         if (is.null(dat))
