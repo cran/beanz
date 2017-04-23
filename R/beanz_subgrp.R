@@ -36,7 +36,7 @@
 #' var.trt    <- "trt";
 #' var.censor <- "censor";
 #' resptype   <- "survival";
-#' subgrp.effect <- r.get.subgrp.raw(solvd.sub,
+#' subgrp.effect <- bzGetSubgrpRaw(solvd.sub,
 #'                                   var.resp   = var.resp,
 #'                                   var.trt    = var.trt,
 #'                                   var.cov    = var.cov,
@@ -45,11 +45,15 @@
 #'
 #' @export
 #'
-
-r.get.subgrp.raw <- function(data.all, var.resp, var.trt, var.cov, var.censor,
-                             resptype=c("continuous", "binary", "survival")) {
+bzGetSubgrpRaw <- function(data.all, var.resp, var.trt, var.cov, var.censor,
+                           resptype=c("continuous", "binary", "survival")) {
 
     resptype <- match.arg(resptype);
+
+    ##check data
+    if (!all(c(var.resp, var.trt, var.cov, var.censor) %in% colnames(data.all)))
+        stop("Variables specified are not in the dataset.");
+
 
     ss     <- r.get.subgroup(data.all, var.cov);
     subgrp <- ss$subgrp;
@@ -123,7 +127,12 @@ r.get.subgrp.raw <- function(data.all, var.resp, var.trt, var.cov, var.censor,
 #' @return A dataframe with treatment effect estimation and variance for each subgroup
 #'
 #' @export
-r.subgrp.effect <- function(data.all, var.ey, var.variance, var.cov) {
+bzGetSubgrp <- function(data.all, var.ey, var.variance, var.cov) {
+
+    ##check data
+    if (!all(c(var.ey, var.variance, var.cov) %in% colnames(data.all)))
+        stop("Variables specified are not in the dataset.");
+
     ey       <- data.all[,var.ey];
     variance <- data.all[,var.variance];
 
@@ -131,6 +140,7 @@ r.subgrp.effect <- function(data.all, var.ey, var.variance, var.cov) {
     subgrp <- ss$subgrp;
     xgrp   <- ss$xgrp;
     ng     <- nrow(subgrp);
+
     y.stat <- NULL;
     for (k in 1:ng) {
         inx     <- which(k == xgrp);
@@ -175,7 +185,6 @@ r.get.subgroup <- function(data.all, var.cov) {
 get.merge.subg <- function(estimates, variances) {
     ## cochran anova estimates for inter-group variances
     tau2 <- max(0, var(estimates)-mean(variances), na.rm=TRUE);
-
     wi <- 1/(variances + tau2);
 
     com.mean <- sum(wi * estimates)/sum(wi);

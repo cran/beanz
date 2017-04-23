@@ -16,7 +16,18 @@ fluidPage(theme = shinytheme("united"),
                     ),
           ##title box
           withTags({
-              div(class="cheader", "Bayesian Analysis of Heterogeneity of Treatment Effect")
+              div(class="cheader",
+                  "Bayesian Analysis of Heterogeneity of Treatment Effect",
+                  tags$button(
+                           id = 'close',
+                           type = "button",
+                           class = "btn action-button",
+                           onclick = "setTimeout(function(){window.close();},500);",  # close browser
+                           "Exit",
+                           style="float: right;
+                                  background-image: url(texturebg.jpg);"
+                       )
+                  )
           }),
 
           ## wellPanel(

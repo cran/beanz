@@ -15,6 +15,12 @@ shinyServer(function(input, output, session) {
         tab.main();
     })
 
+    ##--------------------------------------
+    ##---------exit-------------------------
+    ##--------------------------------------
+    observeEvent(input$close, {stopApp()});
+
+
     ##----------------------------------------------------------------
     ##------------------------DATA UPLOAD-----------------------------
     ##----------------------------------------------------------------
@@ -263,7 +269,6 @@ shinyServer(function(input, output, session) {
 
     ##----analysis panel------------------
     output$uiAnalysis <- renderUI({
-
         ##monitor nominal covariates
         input$selnomcov;
 
@@ -275,16 +280,40 @@ shinyServer(function(input, output, session) {
         } else if (is.null(get.subgrp())) {
             msg.box("Please specify subgroups first.", "warning");
         } else {
-            list(msg.box("<p>Please be cautious with the different assumptions different models make.
-                             The user is encouraged to conduct sensitivity analysis </p><p> by trying different
-                             parameters values in the prior distributions
-                             and examining the roubustness of the results.</p>
-                          <p>Click button below to conduct Bayesian analysis.</p>",
-                         type="warning"),
+            list(msg.warnings(),
+                 msg.box("<p>Click button below to conduct Bayesian analysis.</p>"),
                  actionButton("btnAna", "Conduct Bayesian Analysis", styleclass = "success"),
+                 uiOutput("uiRhatWarn"),
                  uiOutput("mdlrst"));
         };
     })
+
+    ##check convergence
+    output$uiRhatWarn <- renderUI({
+        arst <- ana.rst();
+        if (is.null(arst))
+            return(NULL);
+        flag <- FALSE;
+        for (i in 1:length(arst)) {
+            cur.rhat <- arst[[i]]$rhat;
+            inx      <- which(cur.rhat > get.rhat.warn());
+            if (0 < length(inx)) {
+                flag <- TRUE;
+                break;
+            }
+        }
+        if (!flag) {
+            return(NULL);
+        } else {
+            rst <- msg.box("There are models that may have convergence issues.
+                  Please check Rhat of each model for
+                  details. Longer iterations are recommended to solve this issue. If the issue remains,
+                  it is recommended to carefuly check the convergence by techniques such as
+                  Brook-Gelman-Rubin plots.", "error");
+        }
+        rst
+    })
+
 
     ##---output results panel---
     output$mdlrst <- renderUI({
@@ -302,62 +331,6 @@ shinyServer(function(input, output, session) {
         } else {
             do.call(navlistPanel, gen.rst.tabs.mdl());
         };
-    })
-
-    ## call stan for mcmc sampling
-    ana.rst <- reactive({
-
-        if (is.null(input$btnAna))
-            return(NULL);
-
-        if (0 == input$btnAna)
-            return(NULL);
-
-        isolate({
-
-            ##current subgroup data
-            dat.sub <- get.subgrp();
-            if (any(is.null(dat.sub),
-                    is.null(get.ana.models()))) return(NULL);
-
-            mdls     <- get.ana.models();
-            par.pri  <- get.par.prior();
-            mcmc.par <- get.mcmc.par();
-
-            ##Create a Progress object
-            progress <- shiny::Progress$new(session, min=0, max=1);
-            progress$set(message = "Analysis in progress...", value=0);
-
-            ##Close the progress when this reactive exits (even if there's an error)
-            on.exit(progress$close());
-
-            mcmc.rst <- NULL;
-            for(i in 1:length(mdls)) {
-                cur.m <- which(mdls[i] == ALL.MODELS);
-
-                ##model 7 reduced to model 6 when there is
-                ##only one covariate
-                if (7 == cur.m & 1==length(get.sub.cov()))
-                    next;
-
-                progress$set(value=i/length(mdls), detail=mdls[i]);
-                mcmc.rst[[length(mcmc.rst)+1]] <- call.stan(mdls=STAN.NAME[cur.m],
-                                                            dat.sub=dat.sub,
-                                                            var.estvar=SUB.HEAD,
-                                                            var.cov=get.sub.cov(),
-                                                            var.nom=input$selnomcov,
-                                                            lst.par.pri=par.pri[[cur.m]],
-                                                            chains=1,
-                                                            iter=mcmc.par$iter,
-                                                            warmup=mcmc.par$warmup,
-                                                            thin=mcmc.par$thin,
-                                                            algorithm=mcmc.par$algorithm,
-                                                            seed=mcmc.par$seed);
-
-                names(mcmc.rst)[length(mcmc.rst)] <- mdls[i];
-            }
-        })
-        mcmc.rst
     })
 
 
@@ -399,12 +372,12 @@ shinyServer(function(input, output, session) {
                     ##----effect
                     plotname <- paste("plotrst", myi, sep="");
                     output[[plotname]] <- renderPlot({
-                        r.plot.stan(arst[[myi]], sel.grps=sub.sel, ref.stan.rst=ref);
+                        bzPlot(arst[[myi]], sel.grps=sub.sel, ref.stan.rst=ref);
                     }, bg="transparent", width=900, height=450)
 
                     plotname <- paste("plotforest", myi, sep="");
                     output[[plotname]] <- renderPlot({
-                        r.forest.stan(arst[[myi]], sel.grps=sub.sel, cut=disp.cut, ref.stan.rst=ref);
+                        bzForest(arst[[myi]], sel.grps=sub.sel, cut=disp.cut, ref.stan.rst=ref);
                     }, bg="transparent", width=900, height=450)
 
                     plotname <- paste("plotpred", myi, sep="");
@@ -415,7 +388,7 @@ shinyServer(function(input, output, session) {
                     uname <- paste("tblrst", myi, sep="");
                     output[[uname]] <- DT::renderDataTable(
                         {
-                            r.summary.stan(arst[[myi]], sel.grps=sub.sel, cut=disp.cut,
+                            bzSummary(arst[[myi]], sel.grps=sub.sel, cut=disp.cut,
                                            digits=disp.digit, ref.stan.rst=ref);
                         },
                         rownames=NULL,
@@ -426,18 +399,18 @@ shinyServer(function(input, output, session) {
                     ##----comparison
                     plotname <- paste("plotcomp", myi, sep="");
                     output[[plotname]] <- renderPlot({
-                        r.plot.comp(arst[[myi]], sel.grps=sub.sel);
+                        bzPlotComp(arst[[myi]], sel.grps=sub.sel);
                     }, bg="transparent")
 
                     plotname <- paste("plotforestcomp", myi, sep="");
                     output[[plotname]] <- renderPlot({
-                        r.forest.comp(arst[[myi]], sel.grps=sub.sel, cut=disp.cutcomp);
+                        bzForestComp(arst[[myi]], sel.grps=sub.sel, cut=disp.cutcomp);
                     }, bg="transparent", width=500, height=400);
 
                     uname <- paste("tblcomp", myi, sep="");
                     output[[uname]] <- DT::renderDataTable(
                         {
-                            r.summary.comp(arst[[myi]], sel.grps=sub.sel,
+                            bzSummaryComp(arst[[myi]], sel.grps=sub.sel,
                                               cut=disp.cutcomp, digits=disp.digit);
                         },
                         rownames=NULL,
@@ -448,10 +421,11 @@ shinyServer(function(input, output, session) {
                     ##------stan
                     uname <- paste("txtdic", myi, sep="");
                     output[[uname]] <- renderText({
-                        rst <- sprintf("<h6>
-                                    The deviance information criterion(DIC) of
-                                    this model is <strong>%5.3f<strong>.
-                                   </h6>", dic[myi]);
+                        rst <- sprintf("<h6> <p>The  leave-one-out cross-validation information
+                                    criterion (LOOIC) of this model is <strong>%5.3f</strong>. </p>
+                                    <p> The deviance information criterion(DIC) of
+                                    this model is <strong>%5.3f</strong>.</p>
+                                   </h6>", dic[myi, 2], dic[myi, 1]);
                         HTML(rst);
                     })
 
@@ -462,8 +436,61 @@ shinyServer(function(input, output, session) {
 
                     uname <- paste("plottrace", myi, sep="");
                     output[[uname]] <- renderPlot({
-                        r.plot.trace(arst[[myi]]);
-                    }, bg="transparent", height=get.traceplot.height(arst[[myi]]$smps))
+                        cur.stan <- arst[[myi]]$stan.rst;
+                        rstan::traceplot(cur.stan, pars = get.pars(cur.stan@model_pars));
+                        ##r.plot.trace(arst[[myi]]);
+                    },
+                    bg="transparent",
+                    height=get.traceplot.height(arst[[myi]]$smps))
+
+                    uname <- paste("plotrhat", myi, sep="");
+                    output[[uname]] <- renderPlot({
+                        cur.stan <- arst[[myi]]$stan.rst;
+                        rstan::stan_rhat(cur.stan);
+                    },
+                    bg="transparent")
+
+                    uname <- paste("txtrhat", myi, sep="");
+                    output[[uname]] <- renderText({
+                        cur.rhat <- arst[[myi]]$rhat;
+                        inx      <- which(cur.rhat > get.rhat.warn());
+                        if (0 == length(inx)) {
+                            ss <- "None";
+                        } else {
+                            ss <- paste(names(cur.rhat[inx], collapse=","));
+                        }
+                        rst <- sprintf("<h6><p>Rhat is the Gelman and Rubin potential scale
+                                        reduction statistic that
+                                        measures whether the sampling chains have converged. When If the chains
+                                        have not converged to a common distribution, the Rhat statistic will be
+                                        greater than one. </p> <p> The following parameters have Rhat bigger
+                                        than 1.1: <strong>%s</strong>.  </p>",
+                                       ss);
+                        HTML(rst);
+                    })
+
+                    uname <- paste("plotrhat", myi, sep="");
+                    output[[uname]] <- renderPlot({
+                        cur.stan <- arst[[myi]]$stan.rst;
+                        rstan::stan_rhat(cur.stan);
+                    },
+                    bg="transparent")
+
+                    ## gelman-rubin plot
+                    uname <- paste("plotgr", myi, sep="");
+                    output[[uname]] <- renderPlot({
+                        cur.stan  <- arst[[myi]]$stan.rst;
+                        cur.array <- as.array(cur.stan);
+                        cur.pars  <- get.pars(attr(cur.array, "dimnames")$parameters,
+                                              "^mu+");
+                        cur.coda  <- coda::mcmc.list(lapply(1:ncol(cur.stan),
+                                                           function(x)
+                                              coda::mcmc(cur.array[,x,cur.pars])));
+                        coda::gelman.plot(cur.coda);
+                    },
+                    bg="transparent",
+                    height=get.traceplot.height(arst[[myi]]$smps))
+
                 })
             }
         })
@@ -480,19 +507,18 @@ shinyServer(function(input, output, session) {
         } else if (is.null(get.subgrp())) {
             rst <- msg.box("Please specify subgroups first.", "warning");
         } else {
-
             lele <- list(includeHTML("www/beanz_anoint.html"));
-
             if (DATA.FORMAT[1] == input$dataformat) {
                 lele <- c(lele,
-                          list(msg.box("Toolbox function ANOINT only works for subject level raw data.", "warning")
+                          list(msg.box("Toolbox function ANOINT only works for
+                                        subject level raw data.", "warning")
                                ));
             } else {
-
                 if (!requireNamespace("anoint", quietly = TRUE)) {
                     lele <- c(lele,
                               list(wellPanel(
-                                  msg.box("R package anoint is needed for this function to work. Please install.",
+                                  msg.box("R package anoint is needed for this function
+                                           to work. Please install.",
                                           "warning")
                               )));
                 } else {
@@ -505,12 +531,14 @@ shinyServer(function(input, output, session) {
                 }
             };
 
-            rst <- list(do.call(wellPanel, lele));
+            rst <- list(msg.warnings(),
+                        do.call(wellPanel, lele));
             rst <- c(rst,
                      list(wellPanel(includeHTML("www/beanz_gailsimon.html"),
                                     fluidRow(
                                         column(3, h6("Clinically meaningful threshold"),
-                                               numericInput(inputId="inGscut", label="", value=0, min=0, step=0.1))),
+                                               numericInput(inputId="inGscut", label="",
+                                                            value=0, min=0, step=0.1))),
                                     htmlOutput("txtGS")
                                     )));
         }
@@ -524,7 +552,7 @@ shinyServer(function(input, output, session) {
         if (is.null(dat)) {
             rst  <- paste("<h6>Subgroups are not correctly specified. Please check</h6>");
         } else {
-            pval <- r.gailsimon(dat[, SUB.HEAD[1]], sqrt(dat[, SUB.HEAD[2]]), input$inGscut); ;
+            pval <- bzGailSimon(dat[, SUB.HEAD[1]], sqrt(dat[, SUB.HEAD[2]]), input$inGscut); ;
             rst  <- sprintf("<h6> The P-value for testing the null hypothesis of no qualitative
                                   interaction is %5.4f.</h6>", pval);
         }
@@ -535,7 +563,7 @@ shinyServer(function(input, output, session) {
         if (0 == input$btnTool)
             return(NULL);
 
-        tabsetPanel(position = "above", type = "pills",
+        tabsetPanel(type = "pills",
                     tabPanel("One-by-one interaction",
                              verbatimTextOutput("txtOio")),
                     tabPanel("Unstructured interaction",
@@ -592,12 +620,13 @@ shinyServer(function(input, output, session) {
         if (is.null(dic))
             return(NULL);
 
-        min.mdl <- which.min(dic);
+        min.mdl <- which.min(dic[,2]);
         mdls    <- get.ana.models();
-
-        rst <- paste("<h6> Based on DIC, <strong>", mdls[min.mdl], " </strong>
-                      model is selected for the analysis dataset. The summary result table is as follows: </h6>");
-
+        rst <- paste("<h6> Based on leave-one-out cross-validation information
+                      criterion (LOOIC), results from the <strong>", mdls[min.mdl], " </strong>
+                      model are reported here. <strong>However, this does not imply that the selected
+                      model is significantly better than the other models </strong>. Please consider the
+                      totality of the information for drawing the conclusions. </h6>");
         HTML(rst);
     })
 
@@ -609,7 +638,7 @@ shinyServer(function(input, output, session) {
         disp.cut   <- input$displaycut;
         disp.digit <- input$displaydigit;
         sub.cov    <- get.sub.cov();
-        rst        <- r.rpt.tbl(arst, dat, sub.cov, disp.cut, disp.digit);
+        rst        <- bzRptTbl(arst, dat, sub.cov, disp.cut, disp.digit);
     }, options=list(paging=FALSE), rownames=NULL, selection="none")
 
 

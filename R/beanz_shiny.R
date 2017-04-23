@@ -6,11 +6,9 @@
 #'
 #' Call Shiny to run \code{beanz} as a web-based application
 #'
-#'
-#'
 #' @export
 #'
-run.beanz <- function() {
+bzShiny <- function() {
     if (!requireNamespace("shiny", quietly = TRUE)) {
         stop("Shiny needed for this function to work. Please install it.",
              call. = FALSE)
@@ -22,7 +20,7 @@ run.beanz <- function() {
     }
 
     if (!requireNamespace("DT", quietly = TRUE)) {
-        stop("shinythemes needed for this function to work. Please install it.",
+        stop("DT needed for this function to work. Please install it.",
              call. = FALSE)
     }
 

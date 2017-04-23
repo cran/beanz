@@ -5,9 +5,12 @@
 #' @aliases beanz
 #' @useDynLib beanz, .registration = TRUE
 #'
-#' @importFrom rstan sampling extract stanc
+#' @importFrom rstan sampling extract stanc rstan_options traceplot stan_rhat
 #' @importFrom grDevices colors
 #' @importFrom graphics axis box legend lines par plot points text
+#' @importFrom loo extract_log_lik loo
+#' @importFrom parallel detectCores
+#'
 #'
 #' @import survival
 #' @import stats
@@ -40,13 +43,17 @@
 #' \deqn{
 #' \widehat{\theta}_g | \theta_g, \sigma^2_g \sim N(\theta_g, \sigma^2_g)
 #' }
-#' and assign an informative prior to \eqn{\sigma^2_g}
+#' and assign an informative prior to \eqn{\sigma_g}.
 #'
-#' \deqn{ \log \sigma_g^2 | \widehat{\sigma}^2_g, \Delta_1, \Delta_2 \sim
-#' Unif( \log \widehat{\sigma}^2_g - \Delta_1, \log\widehat{\sigma}^2_g +
-#' \Delta_2) }
-#'
-#' where \eqn{\Delta_1} and \eqn{\Delta_2} are parameters specified
+#' We consider two options in the software: log-normal or uniform prior. The
+#' uniform prior is specified as:
+#' \deqn{ \log \sigma_g | \widehat{\sigma}_g, \Delta \sim
+#' Unif( \log \widehat{\sigma}_g - \Delta, \log\widehat{\sigma}_g +
+#' \Delta) }
+#' and the log-normal prior is specified as:
+#' \deqn{ \log \sigma_g | \widehat{\sigma}_g, \Delta \sim
+#' N( \log \widehat{\sigma}_g, \Delta) }
+#' where \eqn{\Delta} is a parameter specified
 #' by the users.
 #'
 #' We consider a set of models together with the priors for \eqn{\theta_g}:
@@ -93,7 +100,7 @@
 #'  \deqn{ \begin{array}{rcl}
 #'\theta_g|X_g &=& \mu + \sum_{j=1}^P X'_{g,j} \gamma_j \\
 #' \mu &\sim& N(0,B) \\
-#' \gamma_j &\sim& N(0, B) \qquad j=1,\ldots,P.
+#' \gamma_j &\sim& N(0, C) \qquad j=1,\ldots,P.
 #' \end{array} }
 #' }
 #'
@@ -106,7 +113,7 @@
 #' \theta_g  &=& \mu + \phi_g \\
 #' \mu      &\sim& N(0, B) \\
 #' \phi_g   &\sim& N(0, \omega^2) \\
-#' \omega &\sim& {Half-}N(C).
+#' \omega &\sim& {Half-}N(D).
 #' \end{array} }
 #' }
 #'
@@ -119,9 +126,9 @@
 #' \deqn{ \begin{array}{rcl}
 #' \theta_g   &=& \mu + \sum_{j=1}^P  X'_{g,j} \gamma_j + \phi_g \\
 #' \mu &\sim& N(0,B) \\
-#' \gamma_j &\sim& N(0, 1 B) \qquad j=1,\ldots,P\\
+#' \gamma_j &\sim& N(0, 1 C) \qquad j=1,\ldots,P\\
 #' \phi_g   &\sim& N(0, \omega^2) \\
-#' \omega &\sim& {Half-}N(C).
+#' \omega &\sim& {Half-}N(D).
 #'
 #' \end{array}
 #' } }
@@ -138,7 +145,7 @@
 #' \theta_g   &=& \mu + \sum_{j=1}^P X'_{g,j} \gamma_j \\
 #' \mu        &\sim& N(0,B) \\
 #' \gamma_j   &\sim& N(0, \omega^2) \\
-#' \omega   &\sim& {Half-}N(C).
+#' \omega     &\sim& {Half-}N(D).
 #'
 #' \end{array} } }
 #'
@@ -151,7 +158,7 @@
 #'  \theta_g   &=& \mu + \sum_{k=1}^P \sum_{j \in \xi^{(k)}}  X'_{\xi^{(k)},j} \gamma^{(k)}_{j} \\
 #' \mu &\sim& N(0,B) \\
 #' \gamma^{(k)}_j &\sim& N(0, \omega_k^2) \qquad k=1,\ldots,P, \quad j\in \xi^{(k)} \\
-#' \omega_k &\sim& {Half-}N(C),
+#' \omega_k &\sim& {Half-}N(D),
 #' \end{array}
 #' }
 #' where \eqn{\xi^{(k)}} denotes the set of \eqn{k}th order interaction terms
@@ -162,7 +169,7 @@
 #'
 #'@section Graphical user interface (GUI):
 #'
-#' This package provides a web-based Shiny GUI. See \code{\link{run.beanz}} for
+#' This package provides a web-based Shiny GUI. See \code{\link{bzShiny}} for
 #' details.
 #'
 #' @references

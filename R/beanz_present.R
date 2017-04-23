@@ -2,19 +2,18 @@
 ##-----------------------------------------------------------------------------------
 ##                     comparison
 ##-----------------------------------------------------------------------------------
-
 #' Comparison of posterior treatment effects
 #'
 #' Present the difference in the posterior treatment effects
 #' between subgroups
 #'
 #'
-#' @name comp.stan
+#' @name bzComp
 #'
-#' @return \code{r.summary.comp} generates a data frame with summary statistics
+#' @return \code{bzSummaryComp} generates a data frame with summary statistics
 #'     of the difference of treatment effects between the selected subgroups.
-#'     \code{r.plot.comp} generates the density plot of the difference in the
-#'     posterior treatment effects between subgroups. \code{r.forest.comp}
+#'     \code{bzPlotComp} generates the density plot of the difference in the
+#'     posterior treatment effects between subgroups. \code{bzForestComp}
 #'     generates the forest plot of the difference in the posterior treatment
 #'     effects between subgroups.
 #'
@@ -28,41 +27,42 @@
 #' resptype   <- "survival";
 #' var.estvar <- c("Estimate", "Variance");
 #'
-#' subgrp.effect <- r.get.subgrp.raw(solvd.sub,
-#'                                   var.resp   = var.resp,
-#'                                   var.trt    = var.trt,
-#'                                   var.cov    = var.cov,
-#'                                   var.censor = var.censor,
-#'                                   resptype   = resptype);
+#' subgrp.effect <- bzGetSubgrpRaw(solvd.sub,
+#'                              var.resp   = var.resp,
+#'                              var.trt    = var.trt,
+#'                              var.cov    = var.cov,
+#'                              var.censor = var.censor,
+#'                              resptype   = resptype);
 #'
-#' rst.sr     <- call.stan("sr", dat.sub=subgrp.effect,
-#'                         var.estvar=var.estvar, var.cov = var.cov,
-#'                         lst.par.pri=list(vtau=1000, vgamma=1000, vrange=c(0,0)),
-#'                         chains=1, iter=500,
-#'                         warmup=100, thin=2, seed=1000);
+#' rst.sr     <- bzCallStan("sr", dat.sub=subgrp.effect,
+#'                          var.estvar=var.estvar, var.cov = var.cov,
+#'                          par.pri=c(B=1000, C=1000),
+#'                          chains=4, iter=500,
+#'                          warmup=100, thin=2, seed=1000);
 #'
 #' sel.grps <- c(1,4,5);
-#' tbl.sub <- r.summary.comp(rst.sr, sel.grps=sel.grps);
-#' r.plot.stan(rst.sr, sel.grps = sel.grps);
-#' r.forest.stan(rst.sr, sel.grps = sel.grps);
+#' tbl.sub <- bzSummaryComp(rst.sr, sel.grps=sel.grps);
+#' bzPlot(rst.sr, sel.grps = sel.grps);
+#' bzForest(rst.sr, sel.grps = sel.grps);
 #'
 #'
-#' @seealso \code{\link{call.stan}}
+#' @seealso \code{\link{bzCallStan}}
 #'
 #'
 NULL
 
 
-#' @rdname comp.stan
+#' @rdname bzComp
 #'
-#' @inheritParams r.summary.stan
+#' @inheritParams bzSummary
 #'
 #' @export
 #'
-r.summary.comp <- function(stan.rst, sel.grps=NULL, cut=0, digits=3) {
+bzSummaryComp <- function(stan.rst, sel.grps=NULL, cut=0, digits=3) {
 
-    mus <- stan.rst$get.mus();
+    stopifnot(is(stan.rst, "beanz.stan"));
 
+    mus      <- stan.rst$get.mus();
     sel.grps <- get.sel.subgrp(mus, sel.grps);
     if (length(sel.grps) < 2)
         return(NULL);
@@ -89,20 +89,20 @@ r.summary.comp <- function(stan.rst, sel.grps=NULL, cut=0, digits=3) {
 
     rst <- cbind(rownames(rst), rst);
     colnames(rst) <- c("Comparison", "Mean", "SD", "2.5%", "25%",
-                       "Median", "75%", "97.5%", paste("Prob <", cut, sep=""));
+                       "Median", "75%", "97.5%", paste("Prob<", cut, sep=""));
     rst
 }
 
 
 
-#' @rdname comp.stan
+#' @rdname bzComp
 #'
-#' @inheritParams r.plot.stan
+#' @inheritParams bzPlot
 #'
 #' @export
 #'
-r.plot.comp <- function(stan.rst, sel.grps=NULL, ...) {
-
+bzPlotComp <- function(stan.rst, sel.grps=NULL, ...) {
+    stopifnot(is(stan.rst, "beanz.stan"));
     mus      <- stan.rst$get.mus();
     sel.grps <- get.sel.subgrp(mus, sel.grps);
 
@@ -128,14 +128,14 @@ r.plot.comp <- function(stan.rst, sel.grps=NULL, ...) {
                    ...);
 }
 
-#' @rdname comp.stan
+#' @rdname bzComp
 #'
-#' @inheritParams r.forest.stan
+#' @inheritParams bzForest
 #'
 #' @export
 #'
-r.forest.comp <- function(stan.rst, sel.grps=NULL, ..., quants=c(0.025,0.975)) {
-
+bzForestComp <- function(stan.rst, sel.grps=NULL, ..., quants=c(0.025,0.975)) {
+    stopifnot(is(stan.rst, "beanz.stan"));
 
     mus      <- stan.rst$get.mus();
     sel.grps <- get.sel.subgrp(mus, sel.grps);
@@ -169,69 +169,71 @@ r.forest.comp <- function(stan.rst, sel.grps=NULL, ..., quants=c(0.025,0.975)) {
 #'
 #' Present the posterior subgroup treatment effects
 #'
-#' @name summary.stan
+#' @name bzSummary
 #'
-#' @return \code{r.summary.stan} generates a dataframe with summary statistics
+#' @return \code{bzSummary} generates a dataframe with summary statistics
 #'     of the posterior treatment effect for the selected subgroups.
-#'     \code{r.plot.stan} generates the density plot of the posterior treatment
-#'     effects for the selected subgroups. \code{r.forest.stan}
+#'     \code{bzPlot} generates the density plot of the posterior treatment
+#'     effects for the selected subgroups. \code{bzForest}
 #'     generates the forest plot of the posterior treatment
 #'     effects.
 #'
 #'@examples
 #' \dontrun{
 #' sel.grps <- c(1,4,5);
-#' tbl.sub <- r.summary.stan(rst.sr, ref.stan.rst=rst.nse, ref.sel.grps=1);
-#' r.plot.stan(rst.sr, sel.grps = sel.grps, ref.stan.rst=rst.nse, ref.sel.grps=1);
-#' r.forest.stan(rst.sr, sel.grps = sel.grps, ref.stan.rst=rst.nse, ref.sel.grps=1);}
+#' tbl.sub <- bzSummary(rst.sr, ref.stan.rst=rst.nse, ref.sel.grps=1);
+#' bzPlot(rst.sr, sel.grps = sel.grps, ref.stan.rst=rst.nse, ref.sel.grps=1);
+#' bzForest(rst.sr, sel.grps = sel.grps, ref.stan.rst=rst.nse, ref.sel.grps=1);}
 #'
-#' @seealso \code{\link{call.stan}}
+#' @seealso \code{\link{bzCallStan}}
 #'
 #'
 NULL
 
 
-#' @rdname summary.stan
+#' @rdname bzSummary
 #'
 #' @param cut cut point to compute the probabiliby that the posterior subgroup
 #'     treatment effects is below
 #'
 #' @param digits number of digits in the summary result table
 #'
-#' @inheritParams r.plot.stan
+#' @inheritParams bzPlot
 #'
 #' @export
 #'
-r.summary.stan <- function(stan.rst, sel.grps=NULL, ref.stan.rst=NULL, ref.sel.grps=1, cut=0, digits=3) {
+bzSummary <- function(stan.rst, sel.grps=NULL, ref.stan.rst=NULL, ref.sel.grps=1, cut=0, digits=3) {
+
+    stopifnot(is(stan.rst, "beanz.stan"));
 
     s.mus <- get.all.mus(stan.rst, sel.grps, ref.stan.rst, ref.sel.grps);
 
     rst <- apply(s.mus, 2,
                  function(x) {
-                     crst <- c(mean(x),
-                               sd(x),
-                               quantile(x, c(0.025, 0.25, 0.5, 0.75, 0.975)),
-                               mean(x<cut)
-                               );
-                     crst <- round(crst, digits);
-                 });
+        crst <- c(mean(x),
+                  sd(x),
+                  quantile(x, c(0.025, 0.25, 0.5, 0.75, 0.975)),
+                  mean(x<cut)
+                  );
+        crst <- round(crst, digits);
+    });
 
     rst <- t(rst);
     rst <- cbind(colnames(s.mus), rst);
 
     colnames(rst) <- c("Subgroup", "Mean", "SD", "2.5%", "25%", "Median", "75%",
-                       "97.5%", paste("Prob < ", cut, sep=""));
+                       "97.5%", paste("Prob<", cut, sep=""));
     rst
 }
 
-#' @rdname summary.stan
+#' @rdname bzSummary
 #'
 #' @param stan.rst a class \code{beanz.stan} object generated by
-#'     \code{\link{call.stan}}
+#'     \code{\link{bzCallStan}}
 #'
 #' @param sel.grps an array of subgroup numbers to be included in the summary results
 #'
-#' @param ref.stan.rst a class \code{beanz.stan} object from \code{\link{call.stan}} that
+#' @param ref.stan.rst a class \code{beanz.stan} object from \code{\link{bzCallStan}} that
 #'     is used as the reference
 #'
 #' @param ref.sel.grps subgroups from the reference model to be included in the
@@ -241,9 +243,11 @@ r.summary.stan <- function(stan.rst, sel.grps=NULL, ref.stan.rst=NULL, ref.sel.g
 #'
 #' @export
 #'
-r.plot.stan <- function(stan.rst, sel.grps=NULL,
+bzPlot <- function(stan.rst, sel.grps=NULL,
                         ref.stan.rst=NULL, ref.sel.grps=1,
                         ... ) {
+
+    stopifnot(is(stan.rst, "beanz.stan"));
 
     s.mus          <- get.all.mus(stan.rst, sel.grps, ref.stan.rst, ref.sel.grps);
     lst.den        <- apply(s.mus, 2, density);
@@ -255,16 +259,18 @@ r.plot.stan <- function(stan.rst, sel.grps=NULL,
                    ...);
 }
 
-#' @rdname summary.stan
-#' @inheritParams r.plot.stan
+#' @rdname bzSummary
+#' @inheritParams bzPlot
 #' @param quants lower and upper quantiles of the credible intervals in the
 #'     forest plot
 #'
 #' @export
 #'
-r.forest.stan <- function(stan.rst, sel.grps=NULL,
-                        ref.stan.rst=NULL, ref.sel.grps=1,
-                        ..., quants=c(0.025,0.975)) {
+bzForest <- function(stan.rst, sel.grps=NULL,
+                     ref.stan.rst=NULL, ref.sel.grps=1,
+                     ..., quants=c(0.025,0.975)) {
+
+    stopifnot(is(stan.rst, "beanz.stan"));
 
     s.mus    <- get.all.mus(stan.rst, sel.grps, ref.stan.rst, ref.sel.grps);
     mu.q     <- apply(s.mus, 2, quantile, quants);
@@ -279,9 +285,8 @@ r.forest.stan <- function(stan.rst, sel.grps=NULL,
 #'
 #' Get the predictive distribution of the subgroup treatment effects
 #'
-#' @param vrange the pair of \eqn{\Delta_1} and \eqn{\Delta_2}. see \code{\link{beanz-package}}.
-#' @inheritParams call.stan
-#' @inheritParams r.summary.stan
+#' @inheritParams bzCallStan
+#' @inheritParams bzSummary
 #'
 #' @return A dataframe of predicted subgroup treament effects. That is, the
 #'     distribution of \deqn{ \theta_g | \widehat{\theta}_1, \widehat{\sigma}^2_1, \ldots,
@@ -296,83 +301,51 @@ r.forest.stan <- function(stan.rst, sel.grps=NULL,
 #' resptype   <- "survival";
 #' var.estvar <- c("Estimate", "Variance");
 #'
-#' subgrp.effect <- r.get.subgrp.raw(solvd.sub,
+#' subgrp.effect <- bzGetSubgrp(solvd.sub,
 #'                                   var.resp   = var.resp,
 #'                                   var.trt    = var.trt,
 #'                                   var.cov    = var.cov,
 #'                                   var.censor = var.censor,
 #'                                   resptype   = resptype);
 #'
-#' rst.nse    <- call.stan("nse", dat.sub=subgrp.effect,
+#' rst.nse    <- bzCallStan("nse", dat.sub=subgrp.effect,
 #'                          var.estvar = var.estvar, var.cov = var.cov,
-#'                          lst.par.pri = list(vtau=1000, vrange=c(0,0)),
-#'                          chains=1, iter=4000,
+#'                          par.pri = c(B=1000),
+#'                          chains=4, iter=4000,
 #'                          warmup=2000, thin=2, seed=1000);
-#' pred.effect <- r.pred.subgrp.effect(rst.nes,
-#'                                     dat.sub = solvd.sub,
-#'                                     var.estvar = var.estvar,
-#'                                     vrange = c(0,0));}
+#'
+#' pred.effect <- bzPredSubgrp(rst.nes,
+#'                             dat.sub = solvd.sub,
+#'                             var.estvar = var.estvar);}
 #' @export
 #'
-r.pred.subgrp.effect <- function(stan.rst, dat.sub, var.estvar, vrange) {
+bzPredSubgrp <- function(stan.rst, dat.sub, var.estvar) {
 
     stopifnot(class(stan.rst) == "beanz.stan");
-    mus    <- stan.rst$get.mus();
-    sigma2 <- dat.sub[, var.estvar[2]];
-    nsub   <- nrow(dat.sub);
+
+    mus       <- stan.rst$get.mus();
+    prior.sig <- stan.rst$prior.sig;
+    delta     <- stan.rst$delta;
+    sigma2    <- dat.sub[, var.estvar[2]];
+    nsub      <- nrow(dat.sub);
 
     f.sig <- function() {
-        eps  <- runif(nsub, vrange[1], vrange[2]);
-        lsig <- log(sigma2) + eps;
+        if (0 == prior.sig) {
+            eps <- runif(nsub, -delta, delta);
+        } else {
+            eps <- rnorm(nsub, 0, sqrt(delta))
+        }
+        lsig <- log(sqrt(sigma2)) + eps;
         exp(lsig);
     }
 
     rst <- apply(mus, 1, function(x) {
         cur.sig <- f.sig();
-        cur.rst <- rnorm(nsub, x, sqrt(cur.sig));
+        cur.rst <- rnorm(nsub, x, cur.sig);
         cur.rst
     })
 
     t(rst)
-}
-
-##-----------------------------------------------------------------------------------
-##                     traceplot
-##-----------------------------------------------------------------------------------
-#' Trace plot of \code{rstan} samples
-#'
-#' Trace plot of \code{rstan} samples for checking the convergence of the MCMC chains
-#'
-#' @param n.eachrow number of trace plot each row
-#'
-#' @param width plot size: width
-#'
-#' @param height plot size: height
-#'
-#' @inheritParams r.plot.stan
-#'
-#' @seealso \code{\link{call.stan}}
-#'
-#'
-#' @export
-#'
-r.plot.trace <- function(stan.rst, n.eachrow=2, width=4, height=0.8) {
-
-    stopifnot(class(stan.rst) == "beanz.stan");
-
-    stan.samples <- stan.rst$smps;
-
-    pars  <- dimnames(stan.samples)$parameters;
-    n.par <- length(pars);
-    n.row <- ceiling(n.par / n.eachrow);
-    n.smp <- dim(stan.samples)[1];
-
-    par(mfrow=c(n.row, n.eachrow), mar=c(0,0,2,0), pin=c(width, height));
-    for (i in 1:n.par) {
-        smps <- stan.samples[,1,i];
-        plot(1:n.smp, smps, main=pars[i], type="l", xlab=NULL, ylab=NULL, axes=FALSE);
-        box();
-    }
 }
 
 ##-----------------------------------------------------------------------------------
@@ -385,39 +358,41 @@ r.plot.trace <- function(stan.rst, n.eachrow=2, width=4, height=0.8) {
 #' based on the model with the smallest DIC value
 #'
 #' @param lst.stan.rst list of class \code{beanz.stan} results from
-#'     \code{\link{call.stan}} for different models
+#'     \code{\link{bzCallStan}} for different models
 #'
-#' @inheritParams call.stan
-#' @inheritParams r.summary.stan
+#' @inheritParams bzCallStan
+#' @inheritParams bzSummary
 #'
 #' @return A dataframe with summary statistics of the model selected by DIC
 #'
 #' @export
 #'
-r.rpt.tbl <- function(lst.stan.rst, dat.sub, var.cov, cut=0, digits=3) {
+bzRptTbl <- function(lst.stan.rst, dat.sub, var.cov, cut=0, digits=3) {
 
     if (is.null(dat.sub) | is.null(lst.stan.rst))
         return(NULL);
 
-    dic <- NULL;
+    looic <- NULL;
     for (i in 1:length(lst.stan.rst)) {
-        dic <- c(dic, lst.stan.rst[[i]]$dic);
+        looic <- c(looic, lst.stan.rst[[i]]$looic$looic);
     }
 
-    min.mdl <- which.min(dic);
+    min.mdl <- which.min(looic);
     mus     <- lst.stan.rst[[min.mdl]]$get.mus();
     rst     <- apply(mus, 2,
                      function(x) {
-                         crst <- c(mean(x),
-                                   sd(x),
-                                   mean(x < cut)
-                                   );
-                         crst <- round(crst, digits);
-                     });
+        crst <- c(mean(x),
+                  sd(x),
+                  mean(x < cut)
+                  );
+        crst <- round(crst, digits);
+    });
 
     rst           <- t(rst);
     colnames(rst) <- c("Mean", "SD", paste("Prob < ", cut, sep=""));
-    rst           <- cbind(dat.sub[, c("Subgroup", var.cov)] ,rst);
+    rst           <- cbind(Model = lst.stan.rst[[min.mdl]]$mdl,
+                           dat.sub[, c("Subgroup", var.cov)],
+                           rst);
 
     rst
 }
@@ -443,20 +418,20 @@ r.rpt.tbl <- function(lst.stan.rst, dat.sub, var.cov, cut=0, digits=3) {
 #' var.trt    <- "trt";
 #' var.censor <- "censor";
 #' resptype   <- "survival";
-#' subgrp.effect <- r.get.subgrp.raw(solvd.sub,
+#' subgrp.effect <- bzGetSubgrp(solvd.sub,
 #'                                   var.resp   = var.resp,
 #'                                   var.trt    = var.trt,
 #'                                   var.cov    = var.cov,
 #'                                   var.censor = var.censor,
 #'                                   resptype   = resptype);
 #'
-#' gs.pval <- r.gailsimon(subgrp.effect$Estimate,
+#' gs.pval <- bzGailSimon(subgrp.effect$Estimate,
 #'                        subgrp.effect$Variance); }
 #'
 #'
 #' @export
 #'
-r.gailsimon <- function(effects, sderr, d=0) {
+bzGailSimon <- function(effects, sderr, d=0) {
     d  <- abs(d);
     I  <- length(effects);
     Qm <- sum((effects > d) * ((effects-d)/sderr)^2);
@@ -569,11 +544,18 @@ plot.forest <- function(quants,
     }
 }
 
-get.sel.subgrp <- function(mus, sel.grps) {
-    if (is.null(sel.grps)) {
-        sel.grps <- 1:ncol(mus);
+get.sel.subgrp <- function(mus, sel.grps=NULL) {
+
+    smus <- as.numeric(1:ncol(mus));
+
+    if (is.null(sel.grps) |
+        !is.numeric(sel.grps)) {
+        sel.grps <- smus;
     } else {
         sel.grps <- as.numeric(sel.grps);
+        sel.grps <- sel.grps[sel.grps %in% smus];
+        if (0 == length(sel.grps))
+            sel.grps <- smus;
     }
 
     sel.grps;
@@ -591,9 +573,11 @@ get.all.mus <- function(stan.rst, sel.grps=NULL, ref.stan.rst=NULL, ref.sel.grps
     s.mus    <- mus[, sel.grps, drop=FALSE];
 
     if (!is.null(ref.stan.rst)) {
+
         ref.mus <- ref.stan.rst$get.mus();
         if (is.null(ref.sel.grps))
             ref.sel.grps <- sel.grps;
+
         r.mus <- ref.mus[, ref.sel.grps, drop=FALSE];
         colnames(r.mus) <- paste(ref.stan.rst$mdl, "(", ref.sel.grps, ")", sep="");
         s.mus <- cbind(s.mus, r.mus);

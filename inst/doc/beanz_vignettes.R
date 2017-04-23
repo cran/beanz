@@ -3,13 +3,13 @@ require(beanz);
 
 ## ---- eval=T, echo=TRUE--------------------------------------------------
 
-var.cov    <- c("sodium", "lvef", "any.vasodilator.use");
+var.cov    <- c("lvef", "sodium", "any.vasodilator.use");
 var.resp   <- "y";
 var.trt    <- "trt";
 var.censor <- "censor";
 resptype   <- "survival";
 
-subgrp.effect <- r.get.subgrp.raw(solvd.sub,
+subgrp.effect <- bzGetSubgrpRaw(solvd.sub,
                                   var.resp   = var.resp,
                                   var.trt    = var.trt,
                                   var.cov    = var.cov,
@@ -20,69 +20,67 @@ print(subgrp.effect);
 
 ## ---- eval=T, echo=TRUE--------------------------------------------------
 
-var.cov    <- c("sodium", "lvef", "any.vasodilator.use");
 var.estvar <- c("Estimate", "Variance");
 
-rst.nse <- call.stan("nse", dat.sub=subgrp.effect,
+rst.nse <- bzCallStan("nse", dat.sub=subgrp.effect,
                      var.estvar = var.estvar, var.cov = var.cov,
-                     lst.par.pri = list(vtau=1000, vrange=c(0,0)),
-                     chains=1, iter=4000,
-                     warmup=2000, thin=2, seed=1000);
+                     par.pri = c(B=1000),
+                     chains=4, iter=4000,
+                     warmup=2000, seed=1000, cores=1);
 
-rst.sr  <- call.stan("sr", dat.sub=subgrp.effect,
+rst.sr  <- bzCallStan("sr", dat.sub=subgrp.effect,
                      var.estvar = var.estvar, var.cov = var.cov,
-                     lst.par.pri = list(vtau=1000, vgamma=1000, vrange=c(0,0)),
-                     chains=1, iter=4000,
-                     warmup=2000, thin=2, seed=1000);
+                     par.pri = c(B=1000, C=1000),
+                     chains=4, iter=4000,
+                     warmup=2000,  seed=1000, cores=1);
 
-rst.bs  <- call.stan("bs", dat.sub=subgrp.effect,
+rst.bs  <- bzCallStan("bs", dat.sub=subgrp.effect,
                      var.estvar = var.estvar, var.cov = var.cov,
-                     lst.par.pri = list(vtau=1000, vw=100, vrange=c(-0.1,0.1)),
-                     chains=1, iter=4000, warmup=2000, thin=2, seed=1000);
+                     par.pri = c(B=1000, D=1),
+                     chains=4, iter=4000, warmup=2000,  seed=1000, cores=1);
 
 
 ## ---- eval=T, echo=TRUE, fig.width=6, fig.height=5-----------------------
 sel.grps <- c(1,4,5);
-tbl.sub <- r.summary.stan(rst.sr, ref.stan.rst=rst.nse, ref.sel.grps=1);
+tbl.sub <- bzSummary(rst.sr, ref.stan.rst=rst.nse, ref.sel.grps=1);
 print(tbl.sub);
-r.plot.stan(rst.sr, sel.grps = sel.grps, ref.stan.rst=rst.nse, ref.sel.grps=1);
-r.forest.stan(rst.sr, sel.grps = sel.grps, ref.stan.rst=rst.nse, ref.sel.grps=1);
+bzPlot(rst.sr, sel.grps = sel.grps, ref.stan.rst=rst.nse, ref.sel.grps=1);
+bzForest(rst.sr, sel.grps = sel.grps, ref.stan.rst=rst.nse, ref.sel.grps=1);
 
 ## ---- eval=T, echo=TRUE, fig.width=6, fig.height=5-----------------------
-tbl.sub <- r.summary.stan(rst.bs, ref.stan.rst=rst.nse, ref.sel.grps=1);
+tbl.sub <- bzSummary(rst.bs, ref.stan.rst=rst.nse, ref.sel.grps=1);
 print(tbl.sub);
-r.plot.stan(rst.bs, sel.grps = sel.grps, ref.stan.rst=rst.nse, ref.sel.grps=1);
-r.forest.stan(rst.bs, sel.grps = sel.grps, ref.stan.rst=rst.nse, ref.sel.grps=1);
+bzPlot(rst.bs, sel.grps = sel.grps, ref.stan.rst=rst.nse, ref.sel.grps=1);
+bzForest(rst.bs, sel.grps = sel.grps, ref.stan.rst=rst.nse, ref.sel.grps=1);
 
 ## ---- eval=T, echo=TRUE, fig.width=6, fig.height=5-----------------------
-tbl.sub <- r.summary.comp(rst.sr, sel.grps=sel.grps);
+tbl.sub <- bzSummaryComp(rst.sr, sel.grps=sel.grps);
 print(tbl.sub);
-r.plot.stan(rst.sr, sel.grps = sel.grps);
-r.forest.stan(rst.sr, sel.grps = sel.grps);
+bzPlot(rst.sr, sel.grps = sel.grps);
+bzForest(rst.sr, sel.grps = sel.grps);
 
 ## ---- eval=T, echo=TRUE, fig.width=6, fig.height=5-----------------------
-tbl.sub <- r.summary.comp(rst.bs, sel.grps=sel.grps);
+tbl.sub <- bzSummaryComp(rst.bs, sel.grps=sel.grps);
 print(tbl.sub);
-r.plot.comp(rst.bs, sel.grps = sel.grps);
-r.forest.comp(rst.bs, sel.grps = sel.grps);
+bzPlotComp(rst.bs, sel.grps = sel.grps);
+bzForestComp(rst.bs, sel.grps = sel.grps);
 
 ## ---- echo=TRUE----------------------------------------------------------
 lst.rst     <- list(nse=rst.nse, sr=rst.sr, bs=rst.bs);
-tbl.summary <- r.rpt.tbl(lst.rst, dat.sub = subgrp.effect, var.cov = var.cov);
+tbl.summary <- bzRptTbl(lst.rst, dat.sub = subgrp.effect, var.cov = var.cov);
 print(tbl.summary);
 
 ## ---- eval=T, echo=TRUE--------------------------------------------------
-pred.dist <- r.pred.subgrp.effect(rst.sr,
+pred.dist <- bzPredSubgrp(rst.sr,
                                   dat.sub=subgrp.effect,
-                                  var.estvar = var.estvar,
-                                  vrange = c(0,0));
+                                  var.estvar = var.estvar);
 head(pred.dist);
 
 ## ---- eval=F-------------------------------------------------------------
-#  run.beanz();
+#  bzShiny();
 
 ## ---- echo=T-------------------------------------------------------------
-gs.pval <- r.gailsimon(subgrp.effect$Estimate,
+gs.pval <- bzGailSimon(subgrp.effect$Estimate,
                        sqrt(subgrp.effect$Variance));
 print(gs.pval);
 

@@ -8,32 +8,39 @@
 
 data {
 	int<lower=0>  SIZE;
-	real Y[SIZE];
-	real VY[SIZE];
-	real<lower=0> VTAU;
-	real VRANGE[2];
+	vector[SIZE]  Y;
+	vector[SIZE]  SIGY;
+  real<lower=0> B;
+	real<lower=0> DELTA;
+  int<lower=0, upper=1> PRIORSIG;
 }
 
 parameters {
 	vector[SIZE] mu;
-	real<lower=0, upper=1> uvs[SIZE];
+	vector<lower=0, upper=1>[SIZE] uvs;
+	vector[SIZE] nvs;
 }
 
-transformed parameters{
-	real<lower=0> vs[SIZE];
-	vector[2] range;
+transformed parameters {
+	vector<lower=0>[SIZE] vs;
 
-	for (i in 1:SIZE) {
-		range[1] = log(VY[i]) + VRANGE[1];
-		range[2] = log(VY[i]) + VRANGE[2];
-		vs[i]    = exp(range[1] + uvs[i]*(range[2] - range[1]));
-	}
+  if (0 == PRIORSIG) {
+    vs = exp(log(SIGY) + (uvs * 2 - 1) * DELTA);
+  } else {
+    vs = exp(log(SIGY) + nvs * sqrt(DELTA));
+  }
 }
 
 model {
-	mu ~ normal(0, sqrt(VTAU));
-	uvs ~ uniform(0,1);
-	for (i in 1:SIZE) {
-		Y[i] ~ normal(mu[i], sqrt(vs[i]));
-	}
+	mu  ~ normal(0, sqrt(B));
+  uvs ~ uniform(0,1);
+  nvs ~ normal(0,1);
+  Y   ~ normal(mu, vs);
+}
+
+generated quantities {
+  vector[SIZE] log_lik;
+  for (i in 1:SIZE) {
+    log_lik[i] = normal_lpdf(Y[i] | mu[i], vs[i]);    
+  }
 }

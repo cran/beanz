@@ -22,6 +22,17 @@ SUB.HEAD    <- c("Estimate", "Variance");
 ##           UI DEFINITIONS
 ##-------------------------------------------------------------
 
+msg.warnings <- reactive({
+    msg.box("Subgroup analysis are only exploratory unless such analyses
+             were pre-specified in a study protocol at the design stage.
+             The users should be cautious with the choices of the priors
+             in Bayesian subgroup analysis. The users are encouraged to
+             conduct sensitivity analysis by trying different parameter
+             values in the prior distributions and examining the robustness
+             of the results." ,
+            type = "warning")
+})
+
 ##show different type of messages
 msg.box <- function(contents, type="info") {
     switch(type,
@@ -62,7 +73,7 @@ gen.rst.tabs <- reactive({
     for (i in 1:length(mrst)) {
         rst[[length(rst)+1]] <- names(mrst)[i];
         rst[[length(rst)+1]] <- tabPanel("Effects",
-                                         tabsetPanel(position = "above", type="pills",
+                                         tabsetPanel(type="pills",
                                                      tabPanel("Effects Table",
                                                               DT::dataTableOutput(paste("tblrst",i,sep=""))),
                                                      tabPanel("Density",
@@ -70,12 +81,11 @@ gen.rst.tabs <- reactive({
                                                      tabPanel("Forest plot",
                                                               plotOutput(paste("plotforest",i,sep=""))),
                                                      tabPanel("Predictive plot",
-                                                              plotOutput(paste("plotpred",i,sep=""))),
-                                                     align="center"
+                                                              plotOutput(paste("plotpred",i,sep="")))
                                                      )
                                          );
         rst[[length(rst)+1]] <- tabPanel("Comparisons",
-                                         tabsetPanel(position = "above", type="pills",
+                                         tabsetPanel(type="pills",
                                                      tabPanel("Effects Comparison Table",
                                                               DT::dataTableOutput(paste("tblcomp",i,sep=""))),
                                                      tabPanel("Density",
@@ -89,18 +99,22 @@ gen.rst.tabs <- reactive({
                                                                      gen.chk.nsub,
                                                                      max.s,
                                                                      plotOutput(paste("plotforestcomp",i,sep=""))
-                                                                     )),
-                                                     align="center")
+                                                                     )))
                                          );
         rst[[length(rst)+1]] <- tabPanel("STAN Diagnosis",
-                                         tabsetPanel(position = "above", type="pills",
-                                                     tabPanel("DIC",
-                                                              htmlOutput(paste("txtdic",i,sep=""))),
-                                                     tabPanel("Output",
+                                         tabsetPanel(type="pills",
+                                                     tabPanel("Raw Output",
                                                               verbatimTextOutput(paste("txtrst",i,sep=""))),
+                                                     tabPanel("Information Crieria",
+                                                              htmlOutput(paste("txtdic",i,sep=""))),
                                                      tabPanel("Trace Plot",
-                                                              plotOutput(paste("plottrace",i,sep=""))
-                                                              ))
+                                                              plotOutput(paste("plottrace",i,sep=""))),
+                                                     tabPanel("Rhat",
+                                                              plotOutput(paste("plotrhat",i,sep="")),
+                                                              htmlOutput(paste("txtrhat",i,sep="")))
+                                                     ##,tabPanel("Gelman-Rubin Plot",
+                                                     ##         plotOutput(paste("plotgr",i,sep="")))
+                                                     )
                                          );
     }
     rst
@@ -109,11 +123,10 @@ gen.rst.tabs <- reactive({
 ##genereate individual tabpanel for each model
 get.stab <- function(mrst, lab, f) {
     do.call(tabsetPanel,
-            c(list(position = "above", type="pills"),
+            c(list(type="pills"),
               lapply(1:length(mrst),
-                     function(i) {
-                         tabPanel(names(mrst)[i],
-                                  f(paste(lab,i,sep="")))
+                     function(i) {tabPanel(names(mrst)[i],
+                                           f(paste(lab,i,sep="")))
                      })
               ));
 }
@@ -135,6 +148,15 @@ gen.rst.tabs.mdl <- reactive({
     pan.stan       <- get.stab(mrst, "txtrst", verbatimTextOutput);
     pan.trace      <- get.stab(mrst, "plottrace", plotOutput);
     pan.dic        <- get.stab(mrst, "txtdic", htmlOutput);
+    pan.gr         <- get.stab(mrst, "plotgr", plotOutput);
+    pan.rhat       <- do.call(tabsetPanel,
+                              c(list(type="pills"),
+                                lapply(1:length(mrst),
+                                       function(i) {tabPanel(names(mrst)[i],
+                                                             plotOutput(paste("plotrhat",i,sep="")),
+                                                             htmlOutput(paste("txtrhat", i,sep="")))
+                                })
+                                ));
 
     if (n.sel > max.s) {
         pan.dencomp <- pan.forestcomp <- msg.box("There are too many subgroup comparisons.
@@ -148,7 +170,6 @@ gen.rst.tabs.mdl <- reactive({
         pan.forestcomp <- get.stab(mrst, "plotforestcomp", plotOutput);
     }
 
-
     rst <- list(widths=c(2,10),
                 "Effect",
                 tabPanel("Table", pan.table),
@@ -160,9 +181,11 @@ gen.rst.tabs.mdl <- reactive({
                 tabPanel("Density", pan.dencomp),
                 tabPanel("Forest plot", pan.forestcomp),
                 "STAN Diagnosis",
-                tabPanel("DIC", pan.dic),
-                tabPanel("Output", pan.stan),
-                tabPanel("Trace Plot", pan.trace)
+                tabPanel("Raw Output", pan.stan),
+                tabPanel("Information Criteria", pan.dic),
+                tabPanel("Trace Plot", pan.trace),
+                tabPanel("Rhat", pan.rhat)
+                ##,tabPanel("Gelman-Rubin Plot", pan.gr)
                 );
 })
 
@@ -170,6 +193,7 @@ gen.rst.tabs.mdl <- reactive({
 ##subgroup panel
 panel.subgroup <- function() {
     list(
+        msg.warnings(),
         wellPanel(
             h4(textOutput("txtSel")),
             msg.box("Specify variables for defining subgroups.
@@ -249,98 +273,65 @@ panel.priors <- function() {
                     withTags(div(class="content",
                                  HTML(n.lab1),
                                  div(class='intro', id="parM1",
-                                     h6("Prior variance of the group mean"),
-                                     sliderInput(inputId = "m1vtau", label = "",
+                                     h6("Prior variance of the group mean (B)"),
+                                     numericInput(inputId = "m1vtau", label = "",
                                                  value = 1000, min = 100, max = 10000, step=100)
                                      ))
                              ),
                     f.each(2,
-                          h6("Prior variance of the group mean"),
-                          sliderInput(inputId = "m2vtau", label = "", value = 1000,
-                                      min = 100, max = 10000, step=100)
+                          h6("Prior variance of the group mean (B)"),
+                          numericInput(inputId = "m2vtau", label = "", value = 1000,
+                                       min = 100, max = 10000, step=100)
                            ),
                     f.each(3,
-                           h6("Prior variance of the intercept"),
-                           sliderInput(inputId = "m3vtau", label = "", value = 1000,
+                           h6("Prior variance of the intercept (B)"),
+                           numericInput(inputId = "m3vtau", label = "", value = 1000,
                                        min = 100, max = 10000, step=100),
-                           h6("Prior variance of regression coefficients"),
-                           sliderInput(inputId = "m3vgamma", label = "", value = 1000,
+                           h6("Prior variance of regression coefficients (C)"),
+                           numericInput(inputId = "m3vgamma", label = "", value = 1000,
                                        min = 100, max = 10000, step=100)
                            )
                     ),
              column(4,
                     f.each(4,
-                           h6("Prior variance of the group mean"),
-                           sliderInput(inputId = "m4vtau", label = "", value = 1000,
+                           h6("Prior variance of the group mean (B)"),
+                           numericInput(inputId = "m4vtau", label = "", value = 1000,
                                        min = 100, max = 10000, step=100),
-                           h6("Prior variance of the shrinkage parameter"),
-                           sliderInput(inputId = "m4vw", label = "", value = 0,
+                           h6("Prior variance of the shrinkage parameter (D)"),
+                           numericInput(inputId = "m4vw", label = "", value = 1,
                                        min = 0, max = 500, step=0.5)
                            ),
                     f.each(5,
-                           h6("Prior variance of the intercept"),
-                           sliderInput(inputId = "m5vtau", label = "", value = 1000,
+                           h6("Prior variance of the intercept (B)"),
+                           numericInput(inputId = "m5vtau", label = "", value = 1000,
                                        min = 100, max = 10000, step=100),
-                           h6("Prior variance of regression coefficients"),
-                           sliderInput(inputId = "m5vgamma", label = "", value = 1000,
+                           h6("Prior variance of regression coefficients (C)"),
+                           numericInput(inputId = "m5vgamma", label = "", value = 1000,
                                        min = 100, max = 10000, step=100),
-                           h6("Prior variance of the shrinkage parameter"),
-                           sliderInput(inputId = "m5vw", label = "", value = 0,
+                           h6("Prior variance of the shrinkage parameter (D)"),
+                           numericInput(inputId = "m5vw", label = "", value = 1,
                                        min = 0, max = 500, step=0.5)
                           )
                     ),
              column(4,
                     f.each(6,
-                           h6("Prior variance of the group mean"),
-                           sliderInput(inputId = "m6vtau", label = "", value = 1000, min = 100,
+                           h6("Prior variance of the group mean (B)"),
+                           numericInput(inputId = "m6vtau", label = "", value = 1000, min = 100,
                                        max = 10000, step=100),
-                           h6("Prior variance of the shrinkage parameter"),
-                           sliderInput(inputId = "m6vw", label = "", value = 100, min = 0.1, max = 500, step=0.5)
+                           h6("Prior variance of the shrinkage parameter (C)"),
+                           numericInput(inputId = "m6vw", label = "", value = 1,
+                                        min = 0.1, max = 500, step=0.5)
                            ),
                     f.each(7,
                            h6("Prior variance of the group mean"),
-                           sliderInput(inputId = "m7vtau", label = "", value = 1000,
+                           numericInput(inputId = "m7vtau", label = "", value = 1000,
                                        min = 100, max = 10000, step=100),
-                           h6("Prior variance of the shrinkage parameter"),
-                           sliderInput(inputId = "m7vw", label = "", value = 0,
+                           h6("Prior variance of the shrinkage parameter (D)"),
+                           numericInput(inputId = "m7vw", label = "", value = 1,
                                        min = 0, max = 500, step=0.5)
                            )
                     )
              );
-}
-
-
-##tabset for user log in
-tab.login <- function(){
-    div(class="well",
-        textInput("inUname", "User Name", value="guest"),
-        textInput("inPwd", "Password", value="guest"),
-        br(),
-        actionButton("btnLogin", "Login", styleclass="info"),
-        style='width:200px; margin:0 auto; min-height:200px; border-width:0')
-}
-
-
-##entrance page
-tab.entrance <- function() {
-    HTML('<div class="entrance">
-          <img alt="compact" src="compact.svg" data-img="svg"></img>
-                    <h4>Light Version</h4>
-                        <p> For non-statisticians,
-                            options optimized </p>
-                            <button id="btnLight" type="button" class="btn action-button btn-info shiny-bound-input">
-                                Visit
-                            </button>
-        </div>
-        <div class="entrance">
-          <img alt="compact" src="fullversion.svg" data-img="svg"></img>
-                    <h4>Full Version</h4>
-                        <p> For statisticians, options available </p>
-                            <button id="btnFull" type="button" class="btn action-button btn-info shiny-bound-input">
-                                Visit
-                            </button>
-        </div>')
-
 }
 
 ##tabset for start page
@@ -352,19 +343,23 @@ tab.start <- function() {
                           tabPanel("What does BEANZ need?",
                                    wellPanel(includeHTML("www/beanz_need.html"))),
                           tabPanel("What does BEANZ provide?",
-                                   wellPanel(includeHTML("www/beanz_rst.html"))))
+                                   wellPanel(includeHTML("www/beanz_rst.html"))),
+                          tabPanel("Warnings",
+                                   wellPanel(includeHTML("www/beanz_warn.html")))
+                          )
              );
 }
-
 
 ##tabset for data uploading
 tab.upload <- function(){
     tabPanel("Upload Data",
+             msg.warnings(),
              fluidPage(
                  ##msg.box('Please upload data file on this page.
                  ##         Note at this stage, the software only considers discrete baseline covariates.
                  ##         Click to download a <a href="example_rawdata.txt" download>raw data</a>
-                 ##         or <a href="example_subgroupinfo.txt" download>subgroup treatment effect </a> example file.'),
+                 ##         or <a href="example_subgroupinfo.txt" download>subgroup treatment effect
+                 ##         </a> example file.'),
                  wellPanel(
                      h4("Upload data"),
                      msg.box("Please upload data file."),
@@ -399,84 +394,99 @@ tab.upload <- function(){
              )
 }
 
-##select models
-tab.model <- function() {
-    tabPanel("Statistical Models",
-             fluidPage(
-                 wellPanel(
-                     msg.box("Select statistical models for subgroup analysis."),
-                     fluidRow(
-                         column(3,
-                                h4("Models"),
-                                checkboxGroupInput("selmdl","",
-                                                   choices = ALL.MODELS,
-                                                   selected = ALL.MODELS[1:length(ALL.MODELS)])),
-                         column(9,
-                                h4("Statistical Details"),
-                                htmlOutput("uiMdlInst")))))
-             );
-}
-
 ##mcmc configuration
 tab.mcmc <- function() {
     tabPanel("Configuration",
+             msg.warnings(),
              wellPanel(
                  h4("Statistical Models and Priors"),
-                 msg.box("<p>Select statistical models and specify priors for model parameters.</p>
-                          <p>Note that if <b>Prior variance of the shrinkage parameter</b> is set to 0,
-                            the non-informative Jeffreys prior will be used.</p>
-                          <p>Details of the models can be found
-                          in the <a href='paper_beanz.pdf'>software manual</a>.</p>"),
+                 msg.box("<p>Select statistical models and specify priors for model parameters.
+                             Details of the models can be found
+                             in the <a href='paper_beanz.pdf'>software manual</a>.</p>"),
                  panel.priors()
              ),
              wellPanel(
-                 h4("MCMC Paramters"),
-                 msg.box("Specify parameters for Bayesian posterior sampling."),
+                 h4("Prior of Variance"),
+                 msg.box("Specify prior distribution and uncertainties parameters for SD.
+                          Details can be found
+                          in the <a href='paper_beanz.pdf'>software manual</a>."),
                  fluidRow(
-                     column(4,
+                     column(3,
+                            h6("Prior of log SD"),
+                            radioButtons(inputId = "plogsig", label="",
+                                         c("Normal Distribution" = 1, "Uniform Distribution" =0))
+                            ),
+                     column(3,
+                            h6("Uncertainty of log SD"),
+                            numericInput(inputId = "deltalogsig", label = "",
+                                        min = 0, max = 100, value = 0, step = 0.1)
+                            )
+                 )
+             ),
+             wellPanel(
+                 h4("MCMC Paramters"),
+                 msg.box("Specify parameters for Bayesian posterior sampling. The target metropolis
+                          acceptance rate and initial step-size are options for advanced users to
+                          control STAN sampler's behavior. "),
+                 fluidRow(
+                     column(3,
                             h6("Number of iterations"),
                             sliderInput(inputId = "mcmciter", label = "",
                                         value = 4000, min = 100, max = 20000, step=100),
                             h6("Number of burn-in"),
-                            sliderInput("mcmcburnin", label = "", value=2000, min=100, max=20000, step=100),
+                            sliderInput("mcmcburnin", label = "", value=2000, min=100, max=20000, step=100)
+                            ),
+                     column(3,
                             h6("Number of thinning"),
-                            sliderInput(inputId = "mcmcthin", label = "", value=2, min=1, max=50, step=1)),
+                            sliderInput(inputId = "mcmcthin", label = "", value=2, min=1, max=50, step=1),
+                            h6("Number of chains"),
+                            sliderInput("mcmcchain", label = "", value=4, min=4, max=10, step=1)
+                            ),
+                     column(3,
+                            h6("Target Metropolis Acceptance Rate"),
+                            sliderInput("mcmcdelta", label = "", value=0.95, min=0.05, max=1, step=0.05),
+                            h6("Initial Step-size"),
+                            sliderInput("mcmcstepsize", label = "", value=1, min=0.05, max=5, step=0.05)
+                            ##h6("Algorithm"),
+                            ##radioButtons('mcmcalg', '', c('NUTS', 'HMC', "Fixed_param"))
+                            ),
                      column(3,
                             h6("Random seed"),
                             numericInput(inputId="mcmcseed", label="", value=0, min=0),
-                            h6("Algorithm"),
-                            radioButtons('mcmcalg', '', c('NUTS', 'HMC', "Fixed_param"))
-                            ),
-                     column(3,
-                            h6("Uncertainty of log variance"),
-                            sliderInput(inputId = "rangelogvar", label = "",
-                                        min = -1, max = 1, value = c(-0.000001, 0.0000001), step = 0.01)
+                            h6("Rhat Warning"),
+                            numericInput(inputId="mcmcrhat", label="", value=1.1, min=1.05),
+                            h6("Number of cores"),
+                            sliderInput(inputId = "mcmccore", label="",
+                                        value = 1, min = 1,
+                                        max = (parallel::detectCores()-1), step = 1)
                             )
                  )),
              wellPanel(
                  h4("Display Parameters"),
                  fluidRow(
-                     column(4,
+                     column(3,
                             h6("Cut off value for treatment effects"),
                             numericInput(inputId="displaycut", label="", value=0),
                             h6("Cut off value for subgroup comparison"),
-                            numericInput(inputId="displaycutcomp", label="", value=0),
+                            numericInput(inputId="displaycutcomp", label="", value=0)
+                            ),
+                     column(3,
                             h6("Digits"),
-                            numericInput(inputId="displaydigit", label="", value=3, min=1, step=1)
-                            ),
-                     column(4,
+                            numericInput(inputId="displaydigit", label="", value=3, min=1, step=1),
                             h6("Maximum subgroups for comparison plots"),
-                            numericInput(inputId="displaynsub", label="", value=5, step=1),
-                            h6("Organize results"),
-                            radioButtons('displayby', '', DISPLAY.BY)
+                            numericInput(inputId="displaynsub", label="", value=5, step=1)
                             ),
-                     column(4,
+                     column(3,
                             h6("Transformation"),
-                            checkboxInput(inputId='displayexp', label='Take exponential transformation', value=FALSE),
+                            checkboxInput(inputId='displayexp',
+                                          label='Take exponential transformation', value=FALSE),
                             h6("Reference"),
                             checkboxInput(inputId='displayref', label='Display no subgroup effect outcome',
                                           value=TRUE)
-                            )
+                            ),
+                     column(3,
+                            h6("Organize results"),
+                            radioButtons('displayby', '', DISPLAY.BY))
                  ),
                  h6("Select subgroups to display in analysis results"),
                  DT::dataTableOutput('subgrpsel')
@@ -485,7 +495,9 @@ tab.mcmc <- function() {
 
 ##download report
 panel.download <- function() {
-    rst <- list(wellPanel(h4("Summary"),
+    rst <- list(
+        msg.warnings(),
+        wellPanel(h4("Summary"),
                    htmlOutput("rstsummary"),
                    DT::dataTableOutput('rsttbl')));
 
@@ -516,7 +528,7 @@ panel.download <- function() {
 
 ##define the main tabset for beans
 tab.main <- function() {
-    panels <- list(position = "above", type = "pills",
+    panels <- list(type = "pills",
                    id="mainpanel",
                    tab.start()
                   ,tab.upload()
@@ -527,13 +539,69 @@ tab.main <- function() {
                   ,tabPanel("Report", uiOutput("uiReport"))
                    );
 
-    ##if (1 == userLog$version) {
-    ##    panels <- c(panels, list(tab.mcmc())); ##tab.model(),
-    ##}
-
     ##generate
     do.call(tabsetPanel, panels);
 }
+
+
+## call stan for mcmc sampling
+ana.rst <- reactive({
+
+    if (is.null(input$btnAna))
+        return(NULL);
+
+    if (0 == input$btnAna)
+        return(NULL);
+
+    isolate({
+
+        ##current subgroup data
+        dat.sub <- get.subgrp();
+        if (any(is.null(dat.sub),
+                is.null(get.ana.models()))) return(NULL);
+
+        mdls     <- get.ana.models();
+        par.pri  <- get.par.prior();
+        mcmc.par <- get.mcmc.par();
+
+        ##Create a Progress object
+        progress <- shiny::Progress$new(session, min=0, max=1);
+        progress$set(message = "Analysis in progress...", value=0);
+
+        ##Close the progress when this reactive exits (even if there's an error)
+        on.exit(progress$close());
+
+        mcmc.rst <- NULL;
+        for(i in 1:length(mdls)) {
+            cur.m <- which(mdls[i] == ALL.MODELS);
+
+            ##model 7 reduced to model 6 when there is
+            ##only one covariate
+            if (7 == cur.m & 1==length(get.sub.cov()))
+                next;
+
+            progress$set(value=i/length(mdls), detail=mdls[i]);
+            mcmc.rst[[length(mcmc.rst)+1]] <- bzCallStan(mdls=STAN.NAME[cur.m],
+                                                        dat.sub=dat.sub,
+                                                        var.estvar=SUB.HEAD,
+                                                        var.cov=get.sub.cov(),
+                                                        var.nom=input$selnomcov,
+                                                        par.pri=par.pri[[cur.m]],
+                                                        prior.sig=as.numeric(input$plogsig),
+                                                        delta=input$deltalogsig,
+                                                        chains=mcmc.par$chains,
+                                                        cores=mcmc.par$cores,
+                                                        control=mcmc.par$control,
+                                                        iter=mcmc.par$iter,
+                                                        warmup=mcmc.par$warmup,
+                                                        thin=mcmc.par$thin,
+                                                        seed=mcmc.par$seed);
+
+            names(mcmc.rst)[length(mcmc.rst)] <- mdls[i];
+        }
+    })
+    mcmc.rst
+})
 
 
 ##-------------------------------------------------------------
@@ -576,11 +644,6 @@ chk.raw.subgrp <- function(dset, resp.type, trt, resp, censor, cov, levels) {
             msg <- paste(msg, "<li>Response is not binary </li>");
     }
 
-
-
-    ##if (nrow(unique(dset[, c(trt, cov)])) != nrow(dset))
-    ##    msg <- paste(msg, "<li>Subgroups are not unique</li>");
-
     ##return
     if (is.null(msg)) {
         rst <- NULL;
@@ -614,10 +677,6 @@ chk.summary.subgrp <- function(dset, est, var, cov, levels) {
         if (any(1 >= levels))
             msg <- paste(msg, "<li>Some covariate has less than two levels</li>");
     };
-
-    ##else if (nrow(unique(dset[, cov, drop=FALSE])) != nrow(dset)) {
-    ##    msg <- paste(msg, "<li>Subgroups are not unique</li>");
-    ##}
 
     ##return
     if (is.null(msg)) {
@@ -687,6 +746,11 @@ get.data <- reactive({
     userLog$data;
 })
 
+##rhat warning
+get.rhat.warn <- reactive({
+    input$mcmcrhat;
+})
+
 ##get subgroup effects
 get.subgrp.raw <- function() {
     c.data <- get.data();
@@ -699,7 +763,7 @@ get.subgrp.raw <- function() {
         return(NULL);
 
     resptype <- c("continuous", "binary", "survival")[which(RESP.TYPE == input$resptype)];
-    rst <- r.get.subgrp.raw(c.data, input$selresp, input$seltrt,
+    rst <- bzGetSubgrpRaw(c.data, input$selresp, input$seltrt,
                             input$selcov, input$selcensor, resptype);
 }
 
@@ -713,7 +777,7 @@ get.subgrp.sub <- function() {
         )
         return();
 
-    rst <- r.subgrp.effect(c.data, input$selsube, input$selsubvar, input$selsubcov);
+    rst <- bzGetSubgrp(c.data, input$selsube, input$selsubvar, input$selsubcov);
 }
 
 ##get subgroup data
@@ -771,13 +835,6 @@ get.subgrp.selected <- reactive({
 ##get model selected for analysis
 ##no subgroup effect model is always selected
 get.ana.models <- reactive({
-
-    ## if (0 == userLog$version) {
-    ##     rst <- ALL.MODELS;
-    ## } else {
-    ##     rst <- input$selmdl;
-    ## }
-
     rst <- ALL.MODELS[1];
     for (i in 2:length(ALL.MODELS)) {
         cur.in <- paste("chkM", i, sep="");
@@ -795,22 +852,26 @@ get.mcmc.par <- reactive({
                 warmup=input$mcmcburnin,
                 thin=input$mcmcthin,
                 seed=input$mcmcseed,
+                chains=input$mcmcchain,
+                cores=input$mcmccore,
+                control=list(adapt_delta = input$mcmcdelta,
+                             stepsize    = input$mcmcstepsize),
                 algorithm=input$mcmcalg);
     rst
 })
 
 ##get prior parameters
 get.par.prior <- reactive({
-    rst <- list(mdl1=list(vtau=input$m1vtau),
-                mdl2=list(vtau=input$m2vtau),
-                mdl3=list(vtau=input$m3vtau, vgamma=input$m3vgamma),
-                mdl4=list(vtau=input$m4vtau, vw=input$m4vw),
-                mdl5=list(vtau=input$m5vtau, vw=input$m5vw, vgamma=input$m5vgamma),
-                mdl6=list(vtau=input$m6vtau, vw=input$m6vw),
-                mdl7=list(vtau=input$m7vtau, vw=input$m7vw));
+    rst <- list(mdl1=c(B=input$m1vtau),
+                mdl2=c(B=input$m2vtau),
+                mdl3=c(B=input$m3vtau, C=input$m3vgamma),
+                mdl4=c(B=input$m4vtau, D=input$m4vw),
+                mdl5=c(B=input$m5vtau, D=input$m5vw, C=input$m5vgamma),
+                mdl6=c(B=input$m6vtau, D=input$m6vw),
+                mdl7=c(B=input$m7vtau, D=input$m7vw));
 
-    rst <- mapply(function(x) {c(x, list(vrange=input$rangelogvar))},
-                  rst, SIMPLIFY=FALSE);
+    ##rst <- mapply(function(x) {c(x, list(vrange=input$rangelogvar))},
+    ##              rst, SIMPLIFY=FALSE);
     rst
 })
 
@@ -831,18 +892,16 @@ get.all.dic <- reactive({
 
     rst <- NULL;
     for (i in 1:length(mrst)) {
-        rst <- c(rst, mrst[[i]]$dic);
+        rst <- rbind(rst,
+                     c(mrst[[i]]$dic, mrst[[i]]$looic$looic));
     }
-
     rst
 })
 
 
 ##get anoint analysis results
 get.anoint <- reactive({
-
     c.data <- get.data();
-
     if (is.null(c.data)        |
         is.null(input$selcov)  |
         is.null(input$selresp) |
@@ -852,9 +911,8 @@ get.anoint <- reactive({
         return(NULL);
 
     print(input$selcensor);
-
-    rst <- r.get.anoint(c.data, input$selresp, input$seltrt,
-                        input$selcov, input$selcensor, input$resptype);
+    rst <- .get.anoint(c.data, input$selresp, input$seltrt,
+                      input$selcov, input$selcensor, input$resptype);
 })
 
 
@@ -867,15 +925,13 @@ pred.rst <- reactive({
 
     isolate({
         dat.sub    <- get.subgrp();
-        vrange     <- input$rangelogvar;
         var.estvar <- SUB.HEAD;
 
         rst <- NULL;
         for(i in 1:length(arst)) {
-            rst[[i]] <- r.pred.subgrp.effect(arst[[i]],
-                                             dat.sub=dat.sub,
-                                             var.estvar = var.estvar,
-                                             vrange = vrange);
+            rst[[i]] <- bzPredSubgrp(arst[[i]],
+                                     dat.sub=dat.sub,
+                                     var.estvar = var.estvar);
         }
         names(rst) <- names(arst);
     })
@@ -883,7 +939,7 @@ pred.rst <- reactive({
 })
 
 ##apply anoint to subject level data
-r.get.anoint <- function(data.all, var.resp, var.trt, var.cov, var.censor, resptype) {
+.get.anoint <- function(data.all, var.resp, var.trt, var.cov, var.censor, resptype) {
 
     if (resptype == RESP.TYPE[3]) {
         ##survival
@@ -924,7 +980,7 @@ r.get.anoint <- function(data.all, var.resp, var.trt, var.cov, var.censor, respt
 plot.pred <- function(aprst, dat.sub, var.estvar) {
     par(mfrow=c(2,2))
     funs   <- list(median, sd, min, max);
-    titles <- c("Median", "Standard Deviation", "Minimum", "Maximimu");
+    titles <- c("Median", "Standard Deviation", "Minimum", "Maximum");
 
     for (i in 1:length(funs)) {
         cur.sum <- apply(aprst, 2, funs[[i]]);
@@ -936,4 +992,9 @@ plot.pred <- function(aprst, dat.sub, var.estvar) {
         lines(c(cur.obs,cur.obs), c(0, 1e10), lwd=2, col="red");
         text(cur.obs, 0, "Observed", col="red");
     }
+}
+
+##get relevant parameters
+get.pars <- function(pars, pattern="^mu+|^b0+|^omega+|^phi+|^bgamma+") {
+    pars[grep(pattern, pars)]
 }
