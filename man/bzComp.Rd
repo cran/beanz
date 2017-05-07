@@ -2,9 +2,9 @@
 % Please edit documentation in R/beanz_present.R
 \name{bzComp}
 \alias{bzComp}
-\alias{bzSummaryComp}
-\alias{bzPlotComp}
 \alias{bzForestComp}
+\alias{bzPlotComp}
+\alias{bzSummaryComp}
 \title{Comparison of posterior treatment effects}
 \usage{
 bzSummaryComp(stan.rst, sel.grps = NULL, cut = 0, digits = 3)
@@ -42,7 +42,7 @@ Present the difference in the posterior treatment effects
 between subgroups
 }
 \examples{
-
+\dontrun{
 var.cov    <- c("sodium", "lvef", "any.vasodilator.use");
 var.resp   <- "y";
 var.trt    <- "trt";
@@ -66,10 +66,10 @@ rst.sr     <- bzCallStan("sr", dat.sub=subgrp.effect,
 sel.grps <- c(1,4,5);
 tbl.sub <- bzSummaryComp(rst.sr, sel.grps=sel.grps);
 bzPlot(rst.sr, sel.grps = sel.grps);
-bzForest(rst.sr, sel.grps = sel.grps);
-
+bzForest(rst.sr, sel.grps = sel.grps);}
 
 }
 \seealso{
 \code{\link{bzCallStan}}
 }
+

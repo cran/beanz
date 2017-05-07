@@ -2,8 +2,8 @@
 % Please edit documentation in R/beanz_package.R
 \docType{package}
 \name{beanz-package}
-\alias{beanz-package}
 \alias{beanz}
+\alias{beanz-package}
 \title{Bayesian Approaches for HTE Analysis}
 \description{
 This package contains the functions for running Bayesian models implemented in
@@ -162,7 +162,6 @@ where \eqn{\xi^{(k)}} denotes the set of \eqn{k}th order interaction terms
 This package provides a web-based Shiny GUI. See \code{\link{bzShiny}} for
 details.
 }
-
 \references{
 Jones HE, Ohlssen DI, Neuenschwander B, Racine A, Branson M (2011). Bayesian
 models for subgroup analysis in clinical trials. Clinical Trials, 8(2),
@@ -170,3 +169,4 @@ models for subgroup analysis in clinical trials. Clinical Trials, 8(2),
 
 Dixon DO, Simon R (1991). Bayesian subset analysis. Biometrics, 47(3), 871-881.
 }
+

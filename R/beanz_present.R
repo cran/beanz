@@ -19,7 +19,7 @@
 #'
 #'
 #' @examples
-#'
+#' \dontrun{
 #' var.cov    <- c("sodium", "lvef", "any.vasodilator.use");
 #' var.resp   <- "y";
 #' var.trt    <- "trt";
@@ -43,8 +43,7 @@
 #' sel.grps <- c(1,4,5);
 #' tbl.sub <- bzSummaryComp(rst.sr, sel.grps=sel.grps);
 #' bzPlot(rst.sr, sel.grps = sel.grps);
-#' bzForest(rst.sr, sel.grps = sel.grps);
-#'
+#' bzForest(rst.sr, sel.grps = sel.grps);}
 #'
 #' @seealso \code{\link{bzCallStan}}
 #'

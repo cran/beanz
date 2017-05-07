@@ -71,6 +71,7 @@ A class \code{beanz.stan} list containing
 Call STAN to draw posterior samples for Bayesian HTE models.
 }
 \examples{
+\dontrun{
 var.cov    <- c("sodium", "lvef", "any.vasodilator.use");
 var.resp   <- "y";
 var.trt    <- "trt";
@@ -95,5 +96,6 @@ rst.sr     <- bzCallStan("sr", dat.sub=subgrp.effect,
                         var.estvar=var.estvar, var.cov = var.cov,
                         par.pri=c(B=1000, C=1000),
                         chains=4, iter=600,
-                        warmup=200, thin=2, seed=1000);
+                        warmup=200, thin=2, seed=1000);}
 }
+

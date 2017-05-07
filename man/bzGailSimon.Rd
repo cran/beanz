@@ -35,3 +35,4 @@ gs.pval <- bzGailSimon(subgrp.effect$Estimate,
 
 
 }
+
