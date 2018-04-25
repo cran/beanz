@@ -1,20 +1,18 @@
-##
-## model 6:
-##     dixon and Simon
-##
-##     theta_g ~ N(theta, sigma^2)
-##         theta = b0+b1*X1+..+bp*Xp
-##          b0  ~ N(0, 10^3)
-##          b1..bp ~ N(0, omega^2)
-##          omega^2 ~ HalfN(0,1)
+//
+// model 4:
+//    simple shrinkage
+//
+//     theta_g ~ N(b+phi_g, sigma^2)
+//     phi_g ~ N(0, omega^2)
+//
+//     omega^2 ~ N(0,1)
+//     
+//
 
 data {
-  int<lower=0>     SIZE;
-	int<lower=0>     NX;
-	vector[SIZE]     Y;
-	vector[SIZE]     SIGY;
-	matrix[SIZE, NX] X;
-
+	int<lower=0>  SIZE;
+	vector[SIZE]  Y;
+	vector[SIZE]  SIGY;
   real<lower=0> B;
 	real<lower=0> D;
 	real<lower=0> DELTA;
@@ -24,14 +22,14 @@ data {
 parameters {
   real b0;
   real<lower=0> omega;
-  vector<lower=0, upper=1>[SIZE] uvs;
+ 	vector<lower=0, upper=1>[SIZE] uvs;
 	vector[SIZE] nvs;
-  vector[NX] nomega;
+  vector[SIZE] nphi;
 }
 
 transformed parameters{
 	vector<lower=0>[SIZE] vs;
-  vector[NX] bgamma;
+  vector[SIZE] phi;
 	vector[SIZE] mu;
 
   if (0 == PRIORSIG) {
@@ -40,16 +38,16 @@ transformed parameters{
     vs = exp(log(SIGY) + nvs * sqrt(DELTA));
   }
 
-  bgamma = nomega * omega;
-  mu     = b0+X*bgamma;
-
+  // non-centralization
+  phi = nphi * omega;
+  mu  = b0 + phi;
 }
 
 model {
-  b0     ~ normal(0, sqrt(B));
-  nomega ~ normal(0,1);
-  uvs    ~ uniform(0,1);
-  nvs    ~ normal(0,1);
+  b0    ~ normal(0, sqrt(B));
+  nphi  ~ normal(0,1);
+  uvs   ~ uniform(0,1);
+  nvs   ~ normal(0,1);
 
   if (0 == D) {
     //jeffreys
@@ -59,7 +57,7 @@ model {
     omega ~ normal(0, sqrt(D));
   }
 
-  Y ~ normal(mu, vs);
+	Y ~ normal(mu, vs);
 }
 
 generated quantities {

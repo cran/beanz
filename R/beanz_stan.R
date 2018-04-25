@@ -97,9 +97,9 @@ bzCallStan <- function(mdls = c("nse", "fs", "sr", "bs", "srs", "ds", "eds"),
                       dat.sub,
                       var.estvar,
                       var.cov,
-                      par.pri=c(B=1000,C=1000,D=1),
+                      par.pri=c(B=1000.0,C=1000.0,D=1.0),
                       var.nom=NULL,
-                      delta = 0,
+                      delta = 0.0,
                       prior.sig=1,
                       chains=4,
                       ...) {
@@ -143,11 +143,11 @@ bzCallStan <- function(mdls = c("nse", "fs", "sr", "bs", "srs", "ds", "eds"),
 
     ##call stan
     stan.rst <- rstan::sampling(stanmodels[[mdls]],
-                         data=c(lst.basic, vlist, par.pri),
-                         pars=c("uvs", "nvs", "nomega", "nphi"),
-                         include=FALSE,
-                         chains=chains,
-                         ...);
+                                data=c(lst.basic, vlist, par.pri),
+                                pars=c("uvs", "nvs", "nomega", "nphi"),
+                                include=FALSE,
+                                chains=chains,
+                                ...);
 
     smps <- rstan::extract(stan.rst, permuted=FALSE);
 

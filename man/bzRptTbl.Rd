@@ -27,4 +27,3 @@ A dataframe with summary statistics of the model selected by DIC
 Compare the DIC from different models and report the summary of treatment effects
 based on the model with the smallest DIC value
 }
-

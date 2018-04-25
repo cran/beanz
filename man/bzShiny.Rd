@@ -9,4 +9,3 @@ bzShiny()
 \description{
 Call Shiny to run \code{beanz} as a web-based application
 }
-

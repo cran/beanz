@@ -45,4 +45,3 @@ subgrp.effect <- bzGetSubgrpRaw(solvd.sub,
                                   resptype   = resptype);}
 
 }
-

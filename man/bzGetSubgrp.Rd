@@ -25,4 +25,3 @@ Compute subgroup treatment effect estimation and variance for subgroup effect
 summary data. The estimation and variance are combined if there are multiple
 record of the same subgroup, defined by the covariates, in the data.
 }
-

@@ -1,35 +1,35 @@
-##
-## model 4:
-##    simple shrinkage
-##
-##     theta_g ~ N(b+phi_g, sigma^2)
-##     phi_g ~ N(0, omega^2)
-##
-##     omega^2 ~ N(0,1)
-##     
-##
+//
+// model 3:
+//    simple regression
+//
+//     theta_g ~ N(tau, sigma^2)
+//         tau = b0+b1*X1+..+bp*Xp
+//          b  ~ N(0, 10^3)
+//
 
 data {
 	int<lower=0>  SIZE;
+	int<lower=0>  NX;
 	vector[SIZE]  Y;
 	vector[SIZE]  SIGY;
+	matrix[SIZE, NX] X;
+
   real<lower=0> B;
-	real<lower=0> D;
+	real<lower=0> C;
 	real<lower=0> DELTA;
   int<lower=0, upper=1> PRIORSIG;
 }
 
+
 parameters {
-  real b0;
-  real<lower=0> omega;
+	real       b0;
+	vector[NX] bgamma;
  	vector<lower=0, upper=1>[SIZE] uvs;
 	vector[SIZE] nvs;
-  vector[SIZE] nphi;
 }
 
 transformed parameters{
 	vector<lower=0>[SIZE] vs;
-  vector[SIZE] phi;
 	vector[SIZE] mu;
 
   if (0 == PRIORSIG) {
@@ -38,26 +38,15 @@ transformed parameters{
     vs = exp(log(SIGY) + nvs * sqrt(DELTA));
   }
 
-  ## non-centralization
-  phi = nphi * omega;
-  mu  = b0 + phi;
+  mu = b0+X*bgamma;
 }
 
 model {
-  b0    ~ normal(0, sqrt(B));
-  nphi  ~ normal(0,1);
-  uvs   ~ uniform(0,1);
-  nvs   ~ normal(0,1);
-
-  if (0 == D) {
-    //jeffreys
-    target += -log(omega);
-  } else {
-    //half normal
-    omega ~ normal(0, sqrt(D));
-  }
-
-	Y ~ normal(mu, vs);
+	b0     ~ normal(0, sqrt(B));
+	bgamma ~ normal(0, sqrt(C));
+	uvs    ~ uniform(0,1);
+  nvs    ~ normal(0,1);
+	Y      ~ normal(mu, vs);
 }
 
 generated quantities {

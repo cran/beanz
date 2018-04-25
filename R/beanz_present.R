@@ -55,9 +55,14 @@ NULL
 #'
 #' @inheritParams bzSummary
 #'
+#' @param seed random seed
+#'
 #' @export
 #'
-bzSummaryComp <- function(stan.rst, sel.grps=NULL, cut=0, digits=3) {
+bzSummaryComp <- function(stan.rst, sel.grps=NULL, cut=0, digits=3, seed = NULL) {
+
+    if (!is.null(seed))
+        set.seed(seed);
 
     stopifnot(is(stan.rst, "beanz.stan"));
 
@@ -87,20 +92,27 @@ bzSummaryComp <- function(stan.rst, sel.grps=NULL, cut=0, digits=3) {
 
 
     rst <- cbind(rownames(rst), rst);
-    colnames(rst) <- c("Comparison", "Mean", "SD", "2.5%", "25%",
-                       "Median", "75%", "97.5%", paste("Prob<", cut, sep=""));
-    rst
+    colnames(rst) <- c("Comparison", "Mean", "SD", "Q025", "Q25",
+                       "Median", "Q75", "Q975", paste("ProbLT", cut, sep=""));
+    rownames(rst) <- NULL;
+    data.frame(rst);
 }
 
 
 
 #' @rdname bzComp
 #'
+#'
 #' @inheritParams bzPlot
+#'
 #'
 #' @export
 #'
-bzPlotComp <- function(stan.rst, sel.grps=NULL, ...) {
+bzPlotComp <- function(stan.rst, sel.grps=NULL, ..., seed = NULL) {
+
+    if (!is.null(seed))
+        set.seed(seed);
+
     stopifnot(is(stan.rst, "beanz.stan"));
     mus      <- stan.rst$get.mus();
     sel.grps <- get.sel.subgrp(mus, sel.grps);
@@ -133,8 +145,11 @@ bzPlotComp <- function(stan.rst, sel.grps=NULL, ...) {
 #'
 #' @export
 #'
-bzForestComp <- function(stan.rst, sel.grps=NULL, ..., quants=c(0.025,0.975)) {
+bzForestComp <- function(stan.rst, sel.grps=NULL, ..., quants=c(0.025,0.975), seed = NULL) {
     stopifnot(is(stan.rst, "beanz.stan"));
+
+    if (!is.null(seed))
+        set.seed(seed);
 
     mus      <- stan.rst$get.mus();
     sel.grps <- get.sel.subgrp(mus, sel.grps);
@@ -220,9 +235,10 @@ bzSummary <- function(stan.rst, sel.grps=NULL, ref.stan.rst=NULL, ref.sel.grps=1
     rst <- t(rst);
     rst <- cbind(colnames(s.mus), rst);
 
-    colnames(rst) <- c("Subgroup", "Mean", "SD", "2.5%", "25%", "Median", "75%",
-                       "97.5%", paste("Prob<", cut, sep=""));
-    rst
+    colnames(rst) <- c("Subgroup", "Mean", "SD", "Q025", "Q25", "Median", "Q75",
+                       "Q975", paste("ProbLT", cut, sep=""));
+    rownames(rst) <- NULL;
+    data.frame(rst)
 }
 
 #' @rdname bzSummary

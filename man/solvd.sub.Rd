@@ -26,4 +26,3 @@ Solvd Investigators and others, Effect of enalapril on survival in patients
     with reduced left ventricular ejection fraction and congestive heart
     failure. N Engl J Med. 1991, 325:293-302
 }
-

@@ -72,8 +72,8 @@ test_that("beanz comparison", {
 
     expect_equal(nrow(bz.1), 28);
     expect_equal(nrow(bz.2), 3);
-    expect_equal(colnames(bz.3)[9], "Prob<0.1");
-    expect_true(is.matrix(bz.3));
+    expect_equal(colnames(bz.3)[9], "ProbLT0.1");
+    expect_true(is.data.frame(bz.3));
 })
 
 
@@ -86,10 +86,9 @@ test_that("beanz summary", {
     expect_equal(nrow(bz.1), 8);
     expect_equal(ncol(bz.1), 9);
     expect_equal(nrow(bz.2), 3);
-    expect_equal(colnames(bz.2)[9], "Prob<0.1");
-    expect_true(is.matrix(bz.2));
+    expect_equal(colnames(bz.2)[9], "ProbLT0.1");
+    expect_true(is.data.frame(bz.2));
     expect_equal(nrow(bz.3), 4);
-    expect_equal(rownames(bz.3)[4], "No subgroup effect(1)");
 })
 
 

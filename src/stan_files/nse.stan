@@ -1,10 +1,10 @@
-##
-## model 1:
-##    no subgroup effect
-##
-##      thetag ~ N(mu, sigma^2)
-##      mu     ~ N(0, B)
-##
+//
+// model 1:
+//    no subgroup effect
+//
+//      thetag ~ N(mu, sigma^2)
+//      mu     ~ N(0, B)
+//
 
 data {
 	int<lower=0>  SIZE;

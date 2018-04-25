@@ -49,4 +49,3 @@ pred.effect <- bzPredSubgrp(rst.nes,
                             dat.sub = solvd.sub,
                             var.estvar = var.estvar);}
 }
-

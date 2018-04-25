@@ -18,3 +18,8 @@
 * Added model information to the output from function r.rpt.tbl 
 
 
+# beanz 2.2
+
+* Minor fix in bzSummary() and bzSummaryComp(). Instead of returning matrix,
+  they now return data frames.
+

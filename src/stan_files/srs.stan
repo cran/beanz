@@ -1,12 +1,12 @@
-##
-## model 5:
-##    simple shrinkage+regression
-##
-##     theta_g  ~ N(tau, sigma^2)
-##          tau = b0+b1X1+..+bpXp+phi_g
-##     phi_g ~ N(0, omega^2)
-##       beta~ N(0,1000)
-##     tau^2 ~ HalfN(0,1)
+//
+// model 5:
+//    simple shrinkage+regression
+//
+//     theta_g  ~ N(tau, sigma^2)
+//          tau = b0+b1X1+..+bpXp+phi_g
+//     phi_g ~ N(0, omega^2)
+//       beta~ N(0,1000)
+//     tau^2 ~ HalfN(0,1)
 
 data {
   int<lower=0>     SIZE;
@@ -53,13 +53,13 @@ model {
   nphi    ~ normal(0,1);
   uvs     ~ uniform(0,1);
   nvs     ~ normal(0,1);
-  ##phi     ~ normal(0, omega);
+  //phi     ~ normal(0, omega);
 
   if (0 == D) {
-    ##jeffreys
+    //jeffreys
     target += -log(omega);
   } else {
-    ##half normal
+    //half normal
     omega ~ normal(0, sqrt(D));
   }
 

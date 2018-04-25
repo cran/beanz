@@ -1,24 +1,19 @@
-##
-## model 7:
-##     Extended dixon and Simon
-##
-##     theta_g ~ N(theta, sigma^2)
-##     theta = b0+b1X1+..+bpXp+c1X1X2+..+cX1Xp+..+zX1X2...Xp
-##        a ~ N(0,1000)
-##        b ~ N(0, omega[1]^2)
-##        c ~ N(0, omega[2]^2)
-##             ...
-##     omega^2 ~ HalfN(0,1)
+//
+// model 6:
+//     dixon and Simon
+//
+//     theta_g ~ N(theta, sigma^2)
+//         theta = b0+b1*X1+..+bp*Xp
+//          b0  ~ N(0, 10^3)
+//          b1..bp ~ N(0, omega^2)
+//          omega^2 ~ HalfN(0,1)
 
 data {
-  int<lower=0> SIZE;
-  int<lower=0> NX;
-  int<lower=0> NTAU;
-
-  vector[SIZE]     Y;
+  int<lower=0>     SIZE;
+	int<lower=0>     NX;
+	vector[SIZE]     Y;
 	vector[SIZE]     SIGY;
-  matrix[SIZE, NX] X;
-  int<lower=0>     TAUINX[NX];
+	matrix[SIZE, NX] X;
 
   real<lower=0> B;
 	real<lower=0> D;
@@ -28,11 +23,10 @@ data {
 
 parameters {
   real b0;
-  real<lower=0> omega[NTAU];
+  real<lower=0> omega;
   vector<lower=0, upper=1>[SIZE] uvs;
 	vector[SIZE] nvs;
   vector[NX] nomega;
-
 }
 
 transformed parameters{
@@ -46,11 +40,9 @@ transformed parameters{
     vs = exp(log(SIGY) + nvs * sqrt(DELTA));
   }
 
-  for (i in 1:NX) {
-    bgamma[i] = omega[TAUINX[i]] * nomega[i];
-  }
+  bgamma = nomega * omega;
+  mu     = b0+X*bgamma;
 
-  mu = b0+X*bgamma;
 }
 
 model {
@@ -61,9 +53,7 @@ model {
 
   if (0 == D) {
     //jeffreys
-    for (i in 1:NTAU) {
-      target += -log(omega[i]);
-    }
+    target += -log(omega);
   } else {
     //half normal
     omega ~ normal(0, sqrt(D));

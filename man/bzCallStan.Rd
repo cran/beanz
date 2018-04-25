@@ -98,4 +98,3 @@ rst.sr     <- bzCallStan("sr", dat.sub=subgrp.effect,
                         chains=4, iter=600,
                         warmup=200, thin=2, seed=1000);}
 }
-
