@@ -1,8 +1,8 @@
-2ef0433da2646d4d4c9c993f9d120c32 *DESCRIPTION
+79ff0f82a6032e16e2c764d7371c1c1e *DESCRIPTION
 e8155ff7e8ee552e0c4afb000d75d0c6 *NAMESPACE
 c62d8d772cb2673d274d14f8ac345975 *NEWS.md
 9c120a26361281e1c6d30ba3d7fdd94c *R/beanz_data.R
-e96284f120534b9a43fc0a49d7286ef9 *R/beanz_package.R
+06e9cd254765b21f77712488c2bcc2e0 *R/beanz_package.R
 4fd2a79e68121e8eb10b94b568aa3d68 *R/beanz_present.R
 71c3e0e5d707e5b97dc5778c8e0186f3 *R/beanz_shiny.R
 7bed1920bcad9a87914f453688c5b245 *R/beanz_stan.R
@@ -11,9 +11,10 @@ f905c9246e2a7c745bd7bfdbe95e9e12 *R/stanmodels.R
 7546e4b70a40a6c6504f273f0827f5e7 *R/zzz.R
 d581f2c5390c821dd008abb482101e25 *build/vignette.rds
 86f70241d23e291c4ef48b49157a0321 *data/solvd.sub.rda
+eefc58cfeb8f876a55a6891ec197463a *inst/CITATION
 9858160a6dca6410716b796bb3920a5a *inst/doc/beanz_vignettes.R
 9b9e1b11363ddae298eedf840053431c *inst/doc/beanz_vignettes.Rmd
-daa90d3c215a820d1ea8ec089f943b24 *inst/doc/beanz_vignettes.html
+2699add2f6ca0b96c6e885b7dcc60513 *inst/doc/beanz_vignettes.html
 855c064dbf8deaff96c8dc8a87169109 *inst/include/meta_header.hpp
 84894c91a3a31c1482d13bf788d60ab9 *inst/shiny/beanz_ui.R
 5cd401b2c223abd6ae798a781ae52b2c *inst/shiny/report/report.Rmd
