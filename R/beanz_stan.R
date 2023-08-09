@@ -41,6 +41,7 @@
 #'   \item{sr}{\code{B}, \code{C}}
 #'   \item{bs, ds, eds}{\code{B}, \code{D}}
 #'   \item{srs}{\code{B}, \code{C}, \code{D}}
+#'   \item{nse, fs, sr, bs, srs, ds, eds}{\code{MU}}
 #' }
 #'
 #' @param chains STAN options. Number of chains.
@@ -80,7 +81,7 @@
 #'
 #' rst.nse    <- bzCallStan("nse", dat.sub=subgrp.effect,
 #'                          var.estvar = var.estvar, var.cov = var.cov,
-#'                          par.pri = c(B=1000),
+#'                          par.pri = c(B=1000, MU = 0),
 #'                          chains=4, iter=600,
 #'                          warmup=200, thin=2, seed=1000);
 #'
@@ -97,7 +98,7 @@ bzCallStan <- function(mdls = c("nse", "fs", "sr", "bs", "srs", "ds", "eds"),
                       dat.sub,
                       var.estvar,
                       var.cov,
-                      par.pri=c(B=1000.0,C=1000.0,D=1.0),
+                      par.pri=c(B = 1000.0, C = 1000.0, D = 1.0, MU = 0),
                       var.nom=NULL,
                       delta = 0.0,
                       prior.sig=1,
@@ -111,20 +112,22 @@ bzCallStan <- function(mdls = c("nse", "fs", "sr", "bs", "srs", "ds", "eds"),
         stop("Variables specified are not in the dataset.");
 
     ##check par.pri
-    if (!all(names(par.pri) %in% c("B","C","D")))
+    if (!all(names(par.pri) %in% c("B", "C", "D", "MU")))
         stop("Prior parameters are not recognized.");
 
     ##check number of chains
     if (chains < 2)
         stop("At least 2 Markov Chains are required in order to check convergence.")
 
-    stopifnot(all(par.pri >= 0));
-
     ##check delta
     stopifnot(delta >= 0);
 
     ##check priorsig
-    stopifnot(prior.sig %in% c(0,1));
+    stopifnot(prior.sig %in% c(0, 1));
+
+    ##check model and number of covariates
+    if (length(var.cov) < 2 & "eds" == mdls)
+        stop("eds model requires at least two covariates.");
 
     ##basic data
     lst.basic <- list(SIZE     = nrow(dat.sub),
@@ -140,6 +143,20 @@ bzCallStan <- function(mdls = c("nse", "fs", "sr", "bs", "srs", "ds", "eds"),
 
     ## prior data
     names(par.pri) <- toupper(names(par.pri));
+    if (!("B" %in% names(par.pri))) {
+        par.pri["B"] <- 1000;
+    }
+    if (!("C" %in% names(par.pri))) {
+        par.pri["C"] <- 1000;
+    }
+    if (!("D" %in% names(par.pri))) {
+        par.pri["D"] <- 1.0;
+    }
+    if (!("MU" %in% names(par.pri))) {
+        par.pri["MU"] <- 0;
+    }
+
+    stopifnot(all(par.pri[c("B", "C", "D")] >= 0))
 
     ##call stan
     stan.rst <- rstan::sampling(stanmodels[[mdls]],
@@ -200,7 +217,7 @@ stan.model.sr <- function(dat.sub, var.estvar, var.cov, var.nom) {
     dx     <- df.convert(dx, var.nom);
     fml    <- paste("~", paste(var.cov, collapse="+"), sep="");
     des.x  <- model.matrix(formula(fml), dx);
-    X      <- des.x[,-1]; #remove intercept
+    X      <- des.x[,-1, drop = FALSE]; #remove intercept
     NX     <- ncol(X);
 
     vname  <- make.list(environment());
@@ -219,9 +236,9 @@ stan.model.eds <- function(dat.sub, var.estvar, var.cov, var.nom) {
     dx     <- df.convert(dx, var.nom);
     NTAU   <- ncol(dx);
 
-    fml    <- paste("~", paste(var.cov, collapse="+"), "^", NTAU, sep="");
+    fml    <- paste("~(", paste(var.cov, collapse="+"), ")^", NTAU, sep="");
     des.x  <- model.matrix(formula(fml), dx);
-    X      <- des.x[,-1]; #remove intercept
+    X      <- des.x[,-1,drop = FALSE]; #remove intercept
     NX     <- ncol(X);
 
     ##use the number of : for the order of interaction
@@ -299,4 +316,3 @@ get.mdl.name <- function(mdl) {
 
     rst <- ALL.MODELS[which(mdl == STAN.NAME)];
 }
-

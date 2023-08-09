@@ -23,3 +23,7 @@
 * Minor fix in bzSummary() and bzSummaryComp(). Instead of returning matrix,
   they now return data frames.
 
+# beanz 2.6
+
+* Fixed error in stan.model.eds() for the extended dixon and simon model.
+  credits to Jonathon.Vallejo@fda.hhs.gov.

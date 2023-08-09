@@ -462,7 +462,7 @@ bzGailSimon <- function(effects, sderr, d=0) {
 ##------------tool kit----------------------------------------------
 ##------------------------------------------------------------------
 
-plot.densities <- function(lst.mus.den,
+plot.densities <- function(x,
                            main="", xlab="",
                            ylims=NULL,
                            xlims=NULL,
@@ -471,7 +471,10 @@ plot.densities <- function(lst.mus.den,
                                   colors()),
                            ltys=c(rep(1:4, each=10),
                                   rep(1:6, each=100)),
-                           quants=c(0.025,0.975)) {
+                           quants=c(0.025,0.975),
+                           ...) {
+
+    lst.mus.den <- x;
 
     mus     <- lst.mus.den$mus;
     lst.den <- lst.mus.den$lst.den;
@@ -524,12 +527,14 @@ plot.densities <- function(lst.mus.den,
 
 
 ##plot forest plot
-plot.forest <- function(quants,
+plot.forest <- function(x,
                         cut=0,
                         y.bottom=0.1, y.top=0.95,
                         x.labs=0.2,
-                        main="", xlab="") {
+                        main="", xlab="",
+                        ...) {
 
+    quants <- x;                
     ##where to put labels
     ng    <- nrow(quants);
     ys    <- seq(y.top, y.bottom, length.out=ng);

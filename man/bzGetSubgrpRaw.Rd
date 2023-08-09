@@ -4,8 +4,14 @@
 \alias{bzGetSubgrpRaw}
 \title{Get subgroup treatment effect estimation and variance}
 \usage{
-bzGetSubgrpRaw(data.all, var.resp, var.trt, var.cov, var.censor,
-  resptype = c("continuous", "binary", "survival"))
+bzGetSubgrpRaw(
+  data.all,
+  var.resp,
+  var.trt,
+  var.cov,
+  var.censor,
+  resptype = c("continuous", "binary", "survival")
+)
 }
 \arguments{
 \item{data.all}{subject level dataset}

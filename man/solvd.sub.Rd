@@ -3,7 +3,8 @@
 \name{solvd.sub}
 \alias{solvd.sub}
 \title{Subject level data from SOLVD trial}
-\format{A dataframe with 6 variables:
+\format{
+A dataframe with 6 variables:
 \describe{
   \item{trt}{treatment assignment}
   \item{y}{time to death or first hospitalization}
@@ -11,7 +12,8 @@
   \item{sodium}{level of sodium}
   \item{lvef}{level of lvef}
   \item{any.vasodilator.use}{level of use of vasodilator}
-}}
+}
+}
 \description{
 Dataset for use in \pkg{beanz} examples and vignettes.
 }

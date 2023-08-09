@@ -4,9 +4,18 @@
 \alias{bzCallStan}
 \title{Call STAN models}
 \usage{
-bzCallStan(mdls = c("nse", "fs", "sr", "bs", "srs", "ds", "eds"), dat.sub,
-  var.estvar, var.cov, par.pri = c(B = 1000, C = 1000, D = 1),
-  var.nom = NULL, delta = 0, prior.sig = 1, chains = 4, ...)
+bzCallStan(
+  mdls = c("nse", "fs", "sr", "bs", "srs", "ds", "eds"),
+  dat.sub,
+  var.estvar,
+  var.cov,
+  par.pri = c(B = 1000, C = 1000, D = 1, MU = 0),
+  var.nom = NULL,
+  delta = 0,
+  prior.sig = 1,
+  chains = 4,
+  ...
+)
 }
 \arguments{
 \item{mdls}{name of the Bayesian HTE model. The options are:
@@ -37,6 +46,7 @@ ordinal baseline covariates}
   \item{sr}{\code{B}, \code{C}}
   \item{bs, ds, eds}{\code{B}, \code{D}}
   \item{srs}{\code{B}, \code{C}, \code{D}}
+  \item{nse, fs, sr, bs, srs, ds, eds}{\code{MU}}
 }}
 
 \item{var.nom}{array of column names in dat.sub that corresponds to nominal
@@ -88,7 +98,7 @@ subgrp.effect <- bzGetSubgrpRaw(solvd.sub,
 
 rst.nse    <- bzCallStan("nse", dat.sub=subgrp.effect,
                          var.estvar = var.estvar, var.cov = var.cov,
-                         par.pri = c(B=1000),
+                         par.pri = c(B=1000, MU = 0),
                          chains=4, iter=600,
                          warmup=200, thin=2, seed=1000);
 

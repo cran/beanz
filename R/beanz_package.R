@@ -6,6 +6,8 @@
 #' @useDynLib beanz, .registration = TRUE
 #'
 #' @importFrom rstan sampling extract stanc rstan_options traceplot stan_rhat
+#' @importFrom rstantools rstan_config
+#' @importFrom RcppParallel RcppParallelLibs
 #' @importFrom grDevices colors
 #' @importFrom graphics axis box legend lines par plot points text
 #' @importFrom loo extract_log_lik loo
@@ -69,13 +71,13 @@
 #' \deqn{
 #' \begin{array}{rcl}
 #'     \theta_g &=& \mu\\
-#'      \mu     &\sim& N(0, B),
+#'      \mu     &\sim& N(MU, B),
 #' \end{array}
 #' }
 #'
-#' where \eqn{B} is large in relation to the magnitude of the
-#'  treatment effect size so that the prior for \eqn{\mu} is essentially
-#'  non-informative. }
+#' where \eqn{MU} should be set to 0 in most cases, and
+#'  \eqn{B} is large in relation to the magnitude of the treatment effect size
+#'  so that the prior for \eqn{\mu} is essentially non-informative. }
 #'
 #' \item{\strong{Full stratification model}}{ The subgroups are fully
 #' distinguished from each other with regard to the treatment effect. There is
@@ -85,7 +87,7 @@
 #'\deqn{
 #' \begin{array}{rcl}
 #'   \theta_g &=& \mu_g \\
-#' \mu_g    &\sim& N(0, B).
+#' \mu_g    &\sim& N(MU, B).
 #' \end{array}
 #' }
 #'}
@@ -99,7 +101,7 @@
 #'
 #'  \deqn{ \begin{array}{rcl}
 #'\theta_g|X_g &=& \mu + \sum_{j=1}^P X'_{g,j} \gamma_j \\
-#' \mu &\sim& N(0,B) \\
+#' \mu &\sim& N(MU,B) \\
 #' \gamma_j &\sim& N(0, C) \qquad j=1,\ldots,P.
 #' \end{array} }
 #' }
@@ -111,7 +113,7 @@
 #' \deqn{
 #' \begin{array}{rcl}
 #' \theta_g  &=& \mu + \phi_g \\
-#' \mu      &\sim& N(0, B) \\
+#' \mu      &\sim& N(MU, B) \\
 #' \phi_g   &\sim& N(0, \omega^2) \\
 #' \omega &\sim& {Half-}N(D).
 #' \end{array} }
@@ -125,7 +127,7 @@
 #'
 #' \deqn{ \begin{array}{rcl}
 #' \theta_g   &=& \mu + \sum_{j=1}^P  X'_{g,j} \gamma_j + \phi_g \\
-#' \mu &\sim& N(0,B) \\
+#' \mu &\sim& N(MU,B) \\
 #' \gamma_j &\sim& N(0, 1 C) \qquad j=1,\ldots,P\\
 #' \phi_g   &\sim& N(0, \omega^2) \\
 #' \omega &\sim& {Half-}N(D).
@@ -134,16 +136,17 @@
 #' } }
 #'
 #'
-#' \item{\strong{Dixon and Simon model}}{ This model assumes that the elements in coefficient
-#' are exchangeable with each other, which allows information sharing among
-#' covariate effects. Similar to the simple regression model, only the first-order
-#' interactions are considered. The model is specified as follows:
+#' \item{\strong{Dixon and Simon model}}{ This model assumes that the elements
+#' in coefficient are exchangeable with each other, which allows information
+#' sharing among covariate effects. Similar to the simple regression model, only
+#' the first-order interactions are considered. The model is specified as
+#' follows:
 #'
 #' \deqn{
 #' \begin{array}{rcl}
 #'
 #' \theta_g   &=& \mu + \sum_{j=1}^P X'_{g,j} \gamma_j \\
-#' \mu        &\sim& N(0,B) \\
+#' \mu        &\sim& N(MU,B) \\
 #' \gamma_j   &\sim& N(0, \omega^2) \\
 #' \omega     &\sim& {Half-}N(D).
 #'
@@ -156,7 +159,7 @@
 #'\deqn{
 #' \begin{array}{rcl}
 #'  \theta_g   &=& \mu + \sum_{k=1}^P \sum_{j \in \xi^{(k)}}  X'_{\xi^{(k)},j} \gamma^{(k)}_{j} \\
-#' \mu &\sim& N(0,B) \\
+#' \mu &\sim& N(MU, B) \\
 #' \gamma^{(k)}_j &\sim& N(0, \omega_k^2) \qquad k=1,\ldots,P, \quad j\in \xi^{(k)} \\
 #' \omega_k &\sim& {Half-}N(D),
 #' \end{array}

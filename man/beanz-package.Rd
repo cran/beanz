@@ -57,13 +57,13 @@ We consider a set of models together with the priors for \eqn{\theta_g}:
 \deqn{
 \begin{array}{rcl}
     \theta_g &=& \mu\\
-     \mu     &\sim& N(0, B),
+     \mu     &\sim& N(MU, B),
 \end{array}
 }
 
-where \eqn{B} is large in relation to the magnitude of the
- treatment effect size so that the prior for \eqn{\mu} is essentially
- non-informative. }
+where \eqn{MU} should be set to 0 in most cases, and
+ \eqn{B} is large in relation to the magnitude of the treatment effect size
+ so that the prior for \eqn{\mu} is essentially non-informative. }
 
 \item{\strong{Full stratification model}}{ The subgroups are fully
 distinguished from each other with regard to the treatment effect. There is
@@ -73,7 +73,7 @@ model is specified as follows:
 \deqn{
 \begin{array}{rcl}
   \theta_g &=& \mu_g \\
-\mu_g    &\sim& N(0, B).
+\mu_g    &\sim& N(MU, B).
 \end{array}
 }
 }
@@ -87,7 +87,7 @@ model is specified as follows:
 
  \deqn{ \begin{array}{rcl}
 \theta_g|X_g &=& \mu + \sum_{j=1}^P X'_{g,j} \gamma_j \\
-\mu &\sim& N(0,B) \\
+\mu &\sim& N(MU,B) \\
 \gamma_j &\sim& N(0, C) \qquad j=1,\ldots,P.
 \end{array} }
 }
@@ -99,7 +99,7 @@ as follows:
 \deqn{
 \begin{array}{rcl}
 \theta_g  &=& \mu + \phi_g \\
-\mu      &\sim& N(0, B) \\
+\mu      &\sim& N(MU, B) \\
 \phi_g   &\sim& N(0, \omega^2) \\
 \omega &\sim& {Half-}N(D).
 \end{array} }
@@ -113,7 +113,7 @@ towards the regression surface. The model is specified as follows:
 
 \deqn{ \begin{array}{rcl}
 \theta_g   &=& \mu + \sum_{j=1}^P  X'_{g,j} \gamma_j + \phi_g \\
-\mu &\sim& N(0,B) \\
+\mu &\sim& N(MU,B) \\
 \gamma_j &\sim& N(0, 1 C) \qquad j=1,\ldots,P\\
 \phi_g   &\sim& N(0, \omega^2) \\
 \omega &\sim& {Half-}N(D).
@@ -122,16 +122,17 @@ towards the regression surface. The model is specified as follows:
 } }
 
 
-\item{\strong{Dixon and Simon model}}{ This model assumes that the elements in coefficient
-are exchangeable with each other, which allows information sharing among
-covariate effects. Similar to the simple regression model, only the first-order
-interactions are considered. The model is specified as follows:
+\item{\strong{Dixon and Simon model}}{ This model assumes that the elements
+in coefficient are exchangeable with each other, which allows information
+sharing among covariate effects. Similar to the simple regression model, only
+the first-order interactions are considered. The model is specified as
+follows:
 
 \deqn{
 \begin{array}{rcl}
 
 \theta_g   &=& \mu + \sum_{j=1}^P X'_{g,j} \gamma_j \\
-\mu        &\sim& N(0,B) \\
+\mu        &\sim& N(MU,B) \\
 \gamma_j   &\sim& N(0, \omega^2) \\
 \omega     &\sim& {Half-}N(D).
 
@@ -144,7 +145,7 @@ The model is specified as follows:
 \deqn{
 \begin{array}{rcl}
  \theta_g   &=& \mu + \sum_{k=1}^P \sum_{j \in \xi^{(k)}}  X'_{\xi^{(k)},j} \gamma^{(k)}_{j} \\
-\mu &\sim& N(0,B) \\
+\mu &\sim& N(MU, B) \\
 \gamma^{(k)}_j &\sim& N(0, \omega_k^2) \qquad k=1,\ldots,P, \quad j\in \xi^{(k)} \\
 \omega_k &\sim& {Half-}N(D),
 \end{array}
@@ -169,4 +170,8 @@ models for subgroup analysis in clinical trials. Clinical Trials, 8(2),
 129-143.
 
 Dixon DO, Simon R (1991). Bayesian subset analysis. Biometrics, 47(3), 871-881.
+
+Wang C, Louis TA, Henderson NC, Weiss CO, Varadhan R (2018). beanz: An R
+Package for Bayesian Analysis of Heterogeneous Treatment Effects with a
+Graphical User Interface. Journal of Statistical Software, 85(7), 1-31.
 }
